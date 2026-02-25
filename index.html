@@ -34,61 +34,99 @@
 <h3>තියෙන Products</h3>
 <div id="productList"></div>
 
-<script>
-  let products = JSON.parse(localStorage.getItem("shewa_products")) || [];
+<script type="module">
+// Firebase SDK import කිරීම
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  function saveProducts() {
-    localStorage.setItem("shewa_products", JSON.stringify(products));
-    showProducts();
+// Firebase Config (ඔයාගේ config මෙහි paste කරන්න)
+const firebaseConfig = {
+  apiKey: "AIzaSyCnOm40y1WK7JikSsa3WpYqBBzIisiLO0k",
+  authDomain: "lara-da9ee.firebaseapp.com",
+  projectId: "lara-da9ee",
+  storageBucket: "lara-da9ee.firebasestorage.app",
+  messagingSenderId: "882720302118",
+  appId: "1:882720302118:web:434c43568665680f5632e7",
+  measurementId: "G-M5XSW33HSD"
+};
+
+// Firebase initialize කිරීම
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Firebase DB එකට product එකතු කිරීම
+async function addProduct() {
+  const name = document.getElementById("name").value.trim();
+  const price = Number(document.getElementById("price").value);
+  const category = document.getElementById("category").value;
+  const image = document.getElementById("image").value.trim();
+
+  if (!name || !price || !image) {
+    alert("නම, මිල, image url ඔක්කොම දෙන්න");
+    return;
   }
 
-  function showProducts() {
-    const list = document.getElementById("productList");
-    list.innerHTML = "";
-    products.forEach((p, index) => {
+  try {
+    await addDoc(collection(db, "products"), {
+      name: name,
+      price: price,
+      category: category,
+      image: image
+    });
+    alert("Product එක Firebase database එකට එක් කරන ලදි!");
+
+    // input fields clear කරන්න
+    document.getElementById("name").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("image").value = "";
+
+    // products update කරන්න
+    showProductsFromFirebase();
+  } catch (e) {
+    alert("Error: " + e.message);
+  }
+}
+
+// Firebase DB එකෙන් products පෙන්වන්න
+async function showProductsFromFirebase() {
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+
+  try {
+    const querySnapshot = await getDocs(collection(db, "products"));
+    querySnapshot.forEach((docSnap) => {
+      const p = docSnap.data();
       const div = document.createElement("div");
       div.className = "product";
       div.innerHTML = `
         <strong>${p.name}</strong> - Rs. ${p.price}<br>
         Category: ${p.category}<br>
         <img src="${p.image}" width="120" /><br>
-        <button onclick="deleteProduct(${index})">Delete</button>
+        <button onclick="deleteProduct('${docSnap.id}')">Delete</button>
       `;
       list.appendChild(div);
     });
+  } catch (e) {
+    alert("Error fetching products: " + e.message);
   }
+}
 
-  function addProduct() {
-    const name = document.getElementById("name").value.trim();
-    const price = Number(document.getElementById("price").value);
-    const category = document.getElementById("category").value;
-    const image = document.getElementById("image").value.trim();
-
-    if (!name || !price || !image) {
-      alert("නම, මිල, image url ඔක්කොම දෙන්න");
-      return;
-    }
-
-    products.push({ id: Date.now(), name, price, category, image });
-    saveProducts();
-
-    // form clear කරන්න
-    document.getElementById("name").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("image").value = "";
-  }
-
-  function deleteProduct(index) {
-    if (confirm("මේ product එක ඉවත් කරන්නද?")) {
-      products.splice(index, 1);
-      saveProducts();
+// Firebase DB එකෙන් product එක delete කරන්න
+async function deleteProduct(id) {
+  if (confirm("මේ product එක ඉවත් කරන්නද?")) {
+    try {
+      await deleteDoc(doc(db, "products", id));
+      alert("Product එක ඉවත් කරන ලදි!");
+      showProductsFromFirebase();
+    } catch (e) {
+      alert("Error: " + e.message);
     }
   }
+}
 
-  // පේජ් එක load වෙනකොට products පෙන්වන්න
-  showProducts();
+// page load වෙන විට Firebase DB එකෙන් products display කරන්න
+showProductsFromFirebase();
 </script>
 
 </body>
 </html>
-
