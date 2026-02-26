@@ -73,7 +73,7 @@ async function loadProducts(){
         <td>${p.category}</td>
         <td>
           <button class="edit-btn" onclick="editProduct('${p.id}','${p.name}','${p.price}','${p.category}','${p.image}')">Edit</button>
-          <!-- ⚠️ මෙහි delete issue fix කිරීම: id එක string එකක් බවට convert කරන්න -->
+          <!-- delete fix: ensure id is string -->
           <button class="delete-btn" onclick="deleteProduct('${p.id.toString()}')">Delete</button>
         </td>
       </tr>`;
@@ -83,7 +83,7 @@ async function loadProducts(){
 // Add / Update product
 document.getElementById("productForm").addEventListener("submit", async function(e){
   e.preventDefault();
-  // ⚠️ Date.now() number type generate කරනවා, SheetBest id string type එකක් expect කරන නිසා string convert කරන්න පුළුවන්
+  // add fix: ensure id is string
   const id = document.getElementById("productId").value || Date.now().toString();
   const name = document.getElementById("name").value;
   const price = document.getElementById("price").value;
@@ -92,11 +92,19 @@ document.getElementById("productForm").addEventListener("submit", async function
   const product = { id, name, price, category, image };
 
   if(editingId){
-    // ⚠️ PUT request එකත් string id එකෙන්
-    await fetch(API_URL + "/id/" + editingId.toString(), {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
+    // update fix: ensure id is string
+    await fetch(API_URL + "/id/" + editingId.toString(), {
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(product)
+    });
     editingId = null;
   } else {
-    await fetch(API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
+    await fetch(API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(product)
+    });
   }
   this.reset();
   loadProducts();
@@ -115,7 +123,7 @@ function editProduct(id,name,price,category,image){
 // Delete product
 async function deleteProduct(id){
   if(confirm("Delete this product?")){
-    // ⚠️ Delete issue fix: id.toString() ensure string type
+    // delete fix: id.toString()
     await fetch(API_URL + "/id/" + id.toString(), { method:"DELETE" });
     loadProducts();
   }
