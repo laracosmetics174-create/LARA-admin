@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>LARA Admin Panel</title>
@@ -10,109 +10,60 @@ body{
   color:white;
   padding:40px;
 }
-.container{
-  max-width:900px;
-  margin:auto;
-}
+.container{max-width:900px;margin:auto;}
 h1{color:#ffae00;text-align:center;margin-bottom:30px;}
-
 form{
   background:rgba(255,255,255,0.1);
-  padding:20px;
-  border-radius:15px;
+  padding:20px;border-radius:15px;
 }
-input,select{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-}
-button{
-  margin-top:15px;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
+input,select{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px;}
+button{margin-top:15px;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
 .add-btn{background:#ff4fd8;color:black;}
 .update-btn{background:#ffae00;color:black;}
-.delete-btn{
-  background:red;
-  color:white;
-  padding:5px 10px;
-  font-size:0.8rem;
-}
-table{
-  width:100%;
-  margin-top:30px;
-  border-collapse:collapse;
-}
-th,td{
-  padding:10px;
-  border-bottom:1px solid rgba(255,255,255,0.2);
-}
-.edit-btn{
-  background:#ffae00;
-  color:black;
-  padding:5px 10px;
-  font-size:0.8rem;
-}
+.delete-btn{background:red;color:white;padding:5px 10px;font-size:0.8rem;}
+table{width:100%;margin-top:30px;border-collapse:collapse;}
+th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
+.edit-btn{background:#ffae00;color:black;padding:5px 10px;font-size:0.8rem;}
 </style>
 </head>
-
 <body>
 <div class="container">
-
 <h1>Admin Panel - LARA Cosmetics</h1>
 
 <form id="productForm">
 <input type="hidden" id="productId">
-
 <input type="text" id="name" placeholder="Product Name" required>
 <input type="number" id="price" placeholder="Price" required>
-
 <select id="category">
 <option value="Skincare">Skincare</option>
 <option value="Makeup">Makeup</option>
 <option value="Perfume">Perfume</option>
 <option value="Accessories">Accessories</option>
 </select>
-
-<input type="text" id="image" placeholder="Image URL" required>
-
+<input type="text" id="image" placeholder="Image URL (Cloud/Imgur link)" required>
 <button type="submit" class="add-btn">Save Product</button>
 </form>
 
 <table>
 <thead>
 <tr>
-<th>ID</th>
-<th>Name</th>
-<th>Price</th>
-<th>Category</th>
-<th>Actions</th>
+<th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Actions</th>
 </tr>
 </thead>
 <tbody id="productTable"></tbody>
 </table>
-
 </div>
 
 <script>
-
-const API_URL = "https://api.sheetbest.com/sheets/8bdd385a-80dd-470f-bb2f-f3fdd5c909e4";
-
+const API_URL = "https://api.sheetbest.com/sheets/YOUR_SHEET_ID_HERE";
 let editingId = null;
 
+// Load all products
 async function loadProducts(){
   const res = await fetch(API_URL);
   const data = await res.json();
-
   const table = document.getElementById("productTable");
   table.innerHTML = "";
-
   data.forEach(p => {
     table.innerHTML += `
       <tr>
@@ -124,41 +75,31 @@ async function loadProducts(){
           <button class="edit-btn" onclick="editProduct('${p.id}','${p.name}','${p.price}','${p.category}','${p.image}')">Edit</button>
           <button class="delete-btn" onclick="deleteProduct('${p.id}')">Delete</button>
         </td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
 
+// Add / Update product
 document.getElementById("productForm").addEventListener("submit", async function(e){
   e.preventDefault();
-
   const id = document.getElementById("productId").value || Date.now();
   const name = document.getElementById("name").value;
   const price = document.getElementById("price").value;
   const category = document.getElementById("category").value;
   const image = document.getElementById("image").value;
-
   const product = { id, name, price, category, image };
 
   if(editingId){
-    await fetch(API_URL + "/id/" + editingId, {
-      method:"PUT",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(product)
-    });
+    await fetch(API_URL + "/id/" + editingId, {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
     editingId = null;
   } else {
-    await fetch(API_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(product)
-    });
+    await fetch(API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
   }
-
   this.reset();
   loadProducts();
 });
 
+// Edit product
 function editProduct(id,name,price,category,image){
   editingId = id;
   document.getElementById("productId").value = id;
@@ -168,6 +109,7 @@ function editProduct(id,name,price,category,image){
   document.getElementById("image").value = image;
 }
 
+// Delete product
 async function deleteProduct(id){
   if(confirm("Delete this product?")){
     await fetch(API_URL + "/id/" + id, { method:"DELETE" });
@@ -176,8 +118,6 @@ async function deleteProduct(id){
 }
 
 loadProducts();
-
 </script>
-
 </body>
 </html>
