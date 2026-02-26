@@ -29,7 +29,6 @@ th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
 <body>
 <div class="container">
 <h1>Admin Panel - LARA Cosmetics</h1>
-
 <form id="productForm">
 <input type="hidden" id="productId">
 <input type="text" id="name" placeholder="Product Name" required>
@@ -40,14 +39,14 @@ th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
 <option value="Perfume">Perfume</option>
 <option value="Accessories">Accessories</option>
 </select>
-<input type="text" id="image" placeholder="Image URL (Cloud/Imgur link)" required>
+<input type="text" id="image" placeholder="Image URL (Cloud/Imgur/Pexels link)" required>
 <button type="submit" class="add-btn">Save Product</button>
 </form>
 
 <table>
 <thead>
 <tr>
-<th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Actions</th>
+<th>ID</th><th>Name</th><th>Price</th><th>Category</th><th>Image URL</th><th>Actions</th>
 </tr>
 </thead>
 <tbody id="productTable"></tbody>
@@ -56,63 +55,109 @@ th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
 
 <script>
 const API_URL = "https://api.sheetbest.com/sheets/8bdd385a-80dd-470f-bb2f-f3fdd5c909e4";
-let editingId = null;
 
-// Load all products
-async function loadProducts(){
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  const table = document.getElementById("productTable");
-  table.innerHTML = "";
-  data.forEach(p => {
-    table.innerHTML += `
-      <tr>
-        <td>${p.id}</td>
-        <td>${p.name}</td>
-        <td>${p.price}</td>
-        <td>${p.category}</td>
-        <td>
-          <button class="edit-btn" onclick="editProduct('${p.id}','${p.name}','${p.price}','${p.category}','${p.image}')">Edit</button>
-          <!-- delete fix: ensure id is string -->
-          <button class="delete-btn" onclick="deleteProduct('${p.id.toString()}')">Delete</button>
-        </td>
-      </tr>`;
-  });
+let editingRowNumber = null;  // real row number in sheet (1-based, after header)
+let allProducts = [];         // full data array to track rows
+
+// Load products + remember real row numbers
+async function loadProducts() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error("Failed to load products");
+    
+    const data = await res.json();
+    allProducts = data;
+
+    const table = document.getElementById("productTable");
+    table.innerHTML = "";
+
+    data.forEach((p, index) => {
+      const rowNumber = index + 1; // row 1 = first data row
+
+      table.innerHTML += `
+        <tr>
+          <td>${p.id || '-'}</td>
+          <td>${p.name || ''}</td>
+          <td>${p.price || ''}</td>
+          <td>${p.category || ''}</td>
+          <td style="max-width:200px;word-break:break-all;">${p.image ? '<a href="'+p.image+'" target="_blank">View</a>' : '-'}</td>
+          <td>
+            <button class="edit-btn" onclick="editProduct(${rowNumber}, '${escapeHtml(p.id || '')}', '${escapeHtml(p.name || '')}', '${p.price || ''}', '${escapeHtml(p.category || '')}', '${escapeHtml(p.image || '')}')">Edit</button>
+            <button class="delete-btn" onclick="deleteProduct(${rowNumber})">Delete</button>
+          </td>
+        </tr>`;
+    });
+  } catch (err) {
+    console.error("Load error:", err);
+    alert("Products ලෝඩ් කරන්න බැරි වුණා. Console බලන්න.");
+  }
 }
 
-// Add / Update product
-document.getElementById("productForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  // add fix: ensure id is string
-  const id = document.getElementById("productId").value || Date.now().toString();
-  const name = document.getElementById("name").value;
-  const price = document.getElementById("price").value;
-  const category = document.getElementById("category").value;
-  const image = document.getElementById("image").value;
-  const product = { id, name, price, category, image };
+// Escape HTML to prevent XSS in onclick
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-  if(editingId){
-    // update fix: ensure id is string
-    await fetch(API_URL + "/id/" + editingId.toString(), {
-      method:"PUT",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(product)
-    });
-    editingId = null;
-  } else {
-    await fetch(API_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(product)
-    });
+// Form submit → Add or Update
+document.getElementById("productForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const name     = document.getElementById("name").value.trim();
+  const price    = document.getElementById("price").value.trim();
+  const category = document.getElementById("category").value;
+  const image    = document.getElementById("image").value.trim();
+
+  if (!name || !price || !image) {
+    alert("නම, මිල, රූප URL ඔක්කොම දාන්න!");
+    return;
   }
-  this.reset();
-  loadProducts();
+
+  const product = {
+    id: document.getElementById("productId").value || Date.now().toString(),
+    name,
+    price,
+    category,
+    image
+  };
+
+  let url = API_URL;
+  let method = "POST";
+
+  if (editingRowNumber !== null) {
+    url = `${API_URL}/${editingRowNumber}`;
+    method = "PUT";
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product)
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Error ${res.status}: ${errText}`);
+    }
+
+    this.reset();
+    editingRowNumber = null;
+    document.getElementById("productId").value = "";
+    loadProducts();
+  } catch (err) {
+    console.error("Save error:", err);
+    alert("Save කරන්න බැරි වුණා:\n" + err.message);
+  }
 });
 
-// Edit product
-function editProduct(id,name,price,category,image){
-  editingId = id;
+// Fill form for edit
+function editProduct(rowNumber, id, name, price, category, image) {
+  editingRowNumber = rowNumber;
   document.getElementById("productId").value = id;
   document.getElementById("name").value = name;
   document.getElementById("price").value = price;
@@ -120,15 +165,28 @@ function editProduct(id,name,price,category,image){
   document.getElementById("image").value = image;
 }
 
-// Delete product
-async function deleteProduct(id){
-  if(confirm("Delete this product?")){
-    // delete fix: id.toString()
-    await fetch(API_URL + "/id/" + id.toString(), { method:"DELETE" });
+// Delete product by row number
+async function deleteProduct(rowNumber) {
+  if (!confirm("මේ product එක ඉවත් කරන්නද?")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/${rowNumber}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Delete error ${res.status}: ${errText}`);
+    }
+
     loadProducts();
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Delete කරන්න බැරි වුණා:\n" + err.message);
   }
 }
 
+// Initial load
 loadProducts();
 </script>
 </body>
