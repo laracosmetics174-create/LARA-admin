@@ -19,16 +19,19 @@ form{
 input,select{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px;}
 button{margin-top:15px;padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
 .add-btn{background:#ff4fd8;color:black;}
-.update-btn{background:#ffae00;color:black;}
 .delete-btn{background:red;color:white;padding:5px 10px;font-size:0.8rem;}
 table{width:100%;margin-top:30px;border-collapse:collapse;}
 th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
 .edit-btn{background:#ffae00;color:black;padding:5px 10px;font-size:0.8rem;}
+#statusMessage{color:#ffae00;text-align:center;margin:15px 0;font-weight:bold;}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Admin Panel - LARA Cosmetics</h1>
+
+<div id="statusMessage"></div>
+
 <form id="productForm">
 <input type="hidden" id="productId">
 <input type="text" id="name" placeholder="Product Name" required>
@@ -56,24 +59,28 @@ th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
 <script>
 const API_URL = "https://api.sheetbest.com/sheets/07108683-4692-4aa1-9c3a-95f2845f0c37";
 
-let editingRowNumber = null;  // real row number in sheet (1-based, after header)
-let allProducts = [];         // full data array to track rows
+let editingRowNumber = null;
 
-// Load products + remember real row numbers
 async function loadProducts() {
+  const status = document.getElementById("statusMessage");
+  status.innerHTML = "🔄 Loading products...";
+
   try {
     const res = await fetch(API_URL);
-    if (!res.ok) throw new Error(`Load failed: ${res.status}`);
-    
-    const data = await res.json();
-    allProducts = data;
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+    const data = await res.json();
+    
     const table = document.getElementById("productTable");
     table.innerHTML = "";
 
-    data.forEach((p, index) => {
-      const rowNumber = index + 1; // row 1 = first data row
+    if (data.length === 0) {
+      status.innerHTML = "📭 No products found in the sheet";
+      return;
+    }
 
+    data.forEach((p, index) => {
+      const rowNumber = index + 1;
       table.innerHTML += `
         <tr>
           <td>${p.id || '-'}</td>
@@ -82,52 +89,42 @@ async function loadProducts() {
           <td>${p.category || ''}</td>
           <td style="max-width:200px;word-break:break-all;">${p.image ? '<a href="'+p.image+'" target="_blank">View</a>' : '-'}</td>
           <td>
-            <button class="edit-btn" onclick="editProduct(${rowNumber}, '${escapeHtml(p.id || '')}', '${escapeHtml(p.name || '')}', '${p.price || ''}', '${escapeHtml(p.category || '')}', '${escapeHtml(p.image || '')}')">Edit</button>
+            <button class="edit-btn" onclick="editProduct(${rowNumber}, '${p.id || ''}','${p.name || ''}','${p.price || ''}','${p.category || ''}','${p.image || ''}')">Edit</button>
             <button class="delete-btn" onclick="deleteProduct(${rowNumber})">Delete</button>
           </td>
         </tr>`;
     });
+
+    status.innerHTML = `✅ ${data.length} products loaded successfully`;
   } catch (err) {
-    console.error("Load error:", err);
-    alert("Products ලෝඩ් කරන්න බැරි වුණා: " + err.message);
+    console.error(err);
+    document.getElementById("statusMessage").innerHTML = 
+      `❌ Error loading products<br><small>${err.message}</small>`;
   }
 }
 
-// Escape HTML to prevent XSS in onclick
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-// Form submit → Add or Update
 document.getElementById("productForm").addEventListener("submit", async function(e) {
   e.preventDefault();
+  const status = document.getElementById("statusMessage");
+  status.innerHTML = "💾 Saving...";
 
-  const name     = document.getElementById("name").value.trim();
-  const price    = document.getElementById("price").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const price = document.getElementById("price").value.trim();
   const category = document.getElementById("category").value;
-  const image    = document.getElementById("image").value.trim();
+  const image = document.getElementById("image").value.trim();
 
   if (!name || !price || !image) {
-    alert("නම, මිල, රූප URL ඔක්කොම දාන්න!");
+    status.innerHTML = "⚠️ නම, මිල, රූප URL ඔක්කොම දාන්න!";
     return;
   }
 
   const product = {
     id: document.getElementById("productId").value || Date.now().toString(),
-    name,
-    price,
-    category,
-    image
+    name, price, category, image
   };
 
   let url = API_URL;
   let method = "POST";
-
   if (editingRowNumber !== null) {
     url = `${API_URL}/${editingRowNumber}`;
     method = "PUT";
@@ -136,26 +133,21 @@ document.getElementById("productForm").addEventListener("submit", async function
   try {
     const res = await fetch(url, {
       method: method,
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type": "application/json"},
       body: JSON.stringify(product)
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Error ${res.status}: ${errText}`);
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     this.reset();
     editingRowNumber = null;
-    document.getElementById("productId").value = "";
+    status.innerHTML = "✅ Product saved successfully!";
     loadProducts();
   } catch (err) {
-    console.error("Save error:", err);
-    alert("Save කරන්න බැරි වුණා:\n" + err.message);
+    status.innerHTML = `❌ Save failed: ${err.message}`;
   }
 });
 
-// Fill form for edit
 function editProduct(rowNumber, id, name, price, category, image) {
   editingRowNumber = rowNumber;
   document.getElementById("productId").value = id;
@@ -165,28 +157,23 @@ function editProduct(rowNumber, id, name, price, category, image) {
   document.getElementById("image").value = image;
 }
 
-// Delete product by row number
 async function deleteProduct(rowNumber) {
   if (!confirm("මේ product එක ඉවත් කරන්නද?")) return;
 
+  const status = document.getElementById("statusMessage");
+  status.innerHTML = "🗑 Deleting...";
+
   try {
-    const res = await fetch(`${API_URL}/${rowNumber}`, {
-      method: "DELETE"
-    });
+    const res = await fetch(`${API_URL}/${rowNumber}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Delete error ${res.status}: ${errText}`);
-    }
-
+    status.innerHTML = "✅ Product deleted successfully!";
     loadProducts();
   } catch (err) {
-    console.error("Delete error:", err);
-    alert("Delete කරන්න බැරි වුණා:\n" + err.message);
+    status.innerHTML = `❌ Delete failed: ${err.message}`;
   }
 }
 
-// Initial load
 loadProducts();
 </script>
 </body>
