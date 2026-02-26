@@ -54,7 +54,7 @@ th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.2);}
 </div>
 
 <script>
-const API_URL = "const API_URL = "https://api.sheetbest.com/sheets/07108683-4692-4aa1-9c3a-95f2845f0c37";";
+const API_URL = "https://api.sheetbest.com/sheets/07108683-4692-4aa1-9c3a-95f2845f0c37";
 
 let editingRowNumber = null;  // real row number in sheet (1-based, after header)
 let allProducts = [];         // full data array to track rows
@@ -63,7 +63,7 @@ let allProducts = [];         // full data array to track rows
 async function loadProducts() {
   try {
     const res = await fetch(API_URL);
-    if (!res.ok) throw new Error("Failed to load products");
+    if (!res.ok) throw new Error(`Load failed: ${res.status}`);
     
     const data = await res.json();
     allProducts = data;
@@ -89,7 +89,7 @@ async function loadProducts() {
     });
   } catch (err) {
     console.error("Load error:", err);
-    alert("Products ලෝඩ් කරන්න බැරි වුණා. Console බලන්න.");
+    alert("Products ලෝඩ් කරන්න බැරි වුණා: " + err.message);
   }
 }
 
