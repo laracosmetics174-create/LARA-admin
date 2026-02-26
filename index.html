@@ -73,7 +73,8 @@ async function loadProducts(){
         <td>${p.category}</td>
         <td>
           <button class="edit-btn" onclick="editProduct('${p.id}','${p.name}','${p.price}','${p.category}','${p.image}')">Edit</button>
-          <button class="delete-btn" onclick="deleteProduct('${p.id}')">Delete</button>
+          <!-- ⚠️ මෙහි delete issue fix කිරීම: id එක string එකක් බවට convert කරන්න -->
+          <button class="delete-btn" onclick="deleteProduct('${p.id.toString()}')">Delete</button>
         </td>
       </tr>`;
   });
@@ -82,7 +83,8 @@ async function loadProducts(){
 // Add / Update product
 document.getElementById("productForm").addEventListener("submit", async function(e){
   e.preventDefault();
-  const id = document.getElementById("productId").value || Date.now();
+  // ⚠️ Date.now() number type generate කරනවා, SheetBest id string type එකක් expect කරන නිසා string convert කරන්න පුළුවන්
+  const id = document.getElementById("productId").value || Date.now().toString();
   const name = document.getElementById("name").value;
   const price = document.getElementById("price").value;
   const category = document.getElementById("category").value;
@@ -90,7 +92,8 @@ document.getElementById("productForm").addEventListener("submit", async function
   const product = { id, name, price, category, image };
 
   if(editingId){
-    await fetch(API_URL + "/id/" + editingId, {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
+    // ⚠️ PUT request එකත් string id එකෙන්
+    await fetch(API_URL + "/id/" + editingId.toString(), {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
     editingId = null;
   } else {
     await fetch(API_URL, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(product)});
@@ -112,7 +115,8 @@ function editProduct(id,name,price,category,image){
 // Delete product
 async function deleteProduct(id){
   if(confirm("Delete this product?")){
-    await fetch(API_URL + "/id/" + id, { method:"DELETE" });
+    // ⚠️ Delete issue fix: id.toString() ensure string type
+    await fetch(API_URL + "/id/" + id.toString(), { method:"DELETE" });
     loadProducts();
   }
 }
