@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LARA Cosmetics | Luxury Beauty</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0d0015;
+      --accent-pink: #ff5be0;
+      --accent-gold: #ffb347;
+      --text-light: #f8e9ff;
+      --text-muted: #c9a8d8;
+      --card-bg: rgba(30, 10, 45, 0.55);
+      --border: rgba(255, 91, 224, 0.12);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0d0015 0%, #180025 50%, #220033 100%);
+      color: var(--text-light);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 1.4rem 6%;
+      background: rgba(13, 0, 21, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.1rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #fff, var(--accent-pink), var(--accent-gold), #fff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: 1px;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 2.2rem;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: var(--accent-pink);
+    }
+
+    .cart-btn {
+      background: linear-gradient(90deg, var(--accent-pink), var(--accent-gold));
+      border: none;
+      padding: 0.7rem 1.6rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #000;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .cart-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 91, 224, 0.35);
+    }
+
+    .hero {
+      padding: 14rem 6% 8rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 9vw, 7rem);
+      margin-bottom: 1.5rem;
+      background: linear-gradient(90deg, #fff, var(--accent-pink), var(--accent-gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.1;
+    }
+
+    .search-box {
+      max-width: 720px;
+      margin: 3rem auto 0;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .search-box input,
+    .search-box select {
+      padding: 1rem 1.4rem;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      font-size: 1rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .products {
+      padding: 4rem 6% 10rem;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2.2rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.4rem;
+      backdrop-filter: blur(16px);
+      transition: all 0.4s ease;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-12px);
+      border-color: rgba(255, 91, 224, 0.3);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .card img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      border-radius: 18px;
+      margin-bottom: 1.2rem;
+      transition: transform 0.5s;
+    }
+
+    .card:hover img {
+      transform: scale(1.06);
+    }
+
+    .card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .price {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--accent-pink), var(--accent-gold));
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 91, 224, 0.4);
+    }
+
+    /* Cart Sidebar */
+    .cart-sidebar {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 420px;
+      height: 100%;
+      background: rgba(15, 5, 25, 0.96);
+      backdrop-filter: blur(20px);
+      padding: 2.5rem 2rem;
+      transition: right 0.5s cubic-bezier(0.77,0,0.18,1);
+      z-index: 9999;
+      color: var(--text-light);
+    }
+
+    .cart-sidebar.active {
+      right: 0;
+    }
+
+    .cart-item {
+      background: rgba(255,255,255,0.04);
+      padding: 1.2rem;
+      border-radius: 16px;
+      margin-bottom: 1.2rem;
+      border: 1px solid var(--border);
+    }
+
+    .order-btn {
+      margin-top: 2rem;
+      width: 100%;
+      padding: 1.1rem;
+      background: linear-gradient(90deg, var(--accent-gold), var(--accent-pink));
+      border: none;
+      border-radius: 50px;
+      color: #000;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .order-btn:hover {
+      transform: scale(1.03);
+    }
+
+    .checkout input,
+    .checkout textarea {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      margin: 0.8rem 0;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: white;
+    }
+
+    footer {
+      padding: 3rem 6%;
+      text-align: center;
+      opacity: 0.5;
+      font-size: 0.95rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .cart-sidebar { width: 90%; right: -90%; }
+      .hero { padding-top: 10rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">LARA</div>
+  <nav>
+    <a href="#products">Shop</a>
+    <button class="cart-btn" onclick="toggleCart()">
+      🛒 Cart (<span id="cartCount">0</span>)
+    </button>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Elegance Redefined</h1>
+  <div class="search-box">
+    <input id="searchInput" placeholder="Search your beauty..." onkeyup="renderProducts()">
+    <select id="categoryFilter" onchange="renderProducts()">
+      <option value="all">All Categories</option>
+      <option value="Skincare">Skincare</option>
+      <option value="Makeup">Makeup</option>
+      <option value="Perfume">Perfume</option>
+    </select>
+  </div>
+</section>
+
+<section class="products" id="products">
+  <div class="product-grid" id="productGrid"></div>
+</section>
+
+<footer>
+  © 2026 LARA Cosmetics – Beauty That Shines ✨
+</footer>
+
+<!-- CART SIDEBAR -->
+<div class="cart-sidebar" id="cartSidebar">
+  <h2>Your Cart 🛍️</h2>
+  <div id="cartItems"></div>
+  <h3>Total: Rs. <span id="cartTotal">0</span></h3>
+  
+  <div class="checkout">
+    <input id="customerName" placeholder="Full Name *" required>
+    <input id="customerPhone" placeholder="Phone Number *" required>
+    <input id="customerEmail" placeholder="Email (optional)">
+    <textarea id="customerAddress" placeholder="Delivery Address *" rows="3" required></textarea>
+    <button class="order-btn" onclick="placeOrder()">Place Order →</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+  emailjs.init("W_o_RiuSlVn_zCxlp");
+
+  let products = [];
+  fetch("https://script.google.com/macros/s/AKfycby0FNsa6h84fanuT5xgOD__MH8L69-ORZSXnJJjk1qmvYZ_SSnrRNgLQUjVQujfh8WN/exec")
+    .then(res => res.json())
+    .then(data => {
+      products = data;
+      renderProducts();
+    })
+    .catch(() => {
+      productGrid.innerHTML = "<p style='text-align:center;grid-column:1/-1;'>Products loading failed...</p>";
+    });
+
+  let cart = [];
+
+  function toggleCart() {
+    document.getElementById("cartSidebar").classList.toggle("active");
+    renderCart();
+  }
+
+  function addToCart(id) {
+    let item = cart.find(i => i.id === id);
+    if (item) item.qty++;
+    else cart.push({ id, qty: 1 });
+    renderCart();
+    updateCartCount();
+  }
+
+  function renderProducts() {
+    const grid = document.getElementById("productGrid");
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const cat = document.getElementById("categoryFilter").value;
+
+    grid.innerHTML = "";
+
+    products
+      .filter(p => 
+        p.name.toLowerCase().includes(search) &&
+        (cat === "all" || p.category === cat)
+      )
+      .forEach(p => {
+        grid.innerHTML += `
+          <div class="card">
+            <img src="${p.image}" onerror="this.src='https://via.placeholder.com/300x280?text=${p.name}'" alt="${p.name}">
+            <h3>${p.name}</h3>
+            <div class="price">Rs. ${p.price.toLocaleString()}</div>
+            <button class="btn" onclick="addToCart(${p.id})">Add to Cart</button>
+          </div>
+        `;
+      });
+  }
+
+  function renderCart() {
+    const itemsDiv = document.getElementById("cartItems");
+    let total = 0;
+    itemsDiv.innerHTML = "";
+
+    cart.forEach(i => {
+      let p = products.find(x => x.id == i.id);
+      if (!p) return;
+      let sub = p.price * i.qty;
+      total += sub;
+      itemsDiv.innerHTML += `
+        <div class="cart-item">
+          <strong>${p.name}</strong><br>
+          ${i.qty} × Rs. ${p.price.toLocaleString()} = Rs. ${sub.toLocaleString()}
+        </div>
+      `;
+    });
+
+    document.getElementById("cartTotal").innerText = total.toLocaleString();
+  }
+
+  function updateCartCount() {
+    let qty = cart.reduce((a, b) => a + b.qty, 0);
+    document.getElementById("cartCount").innerText = qty;
+  }
+
+  function placeOrder() {
+    if (cart.length === 0) return alert("Your cart is empty");
+
+    const name    = document.getElementById("customerName").value.trim();
+    const phone   = document.getElementById("customerPhone").value.trim();
+    const email   = document.getElementById("customerEmail").value.trim();
+    const address = document.getElementById("customerAddress").value.trim();
+
+    if (!name || !phone || !address) return alert("Please fill Name, Phone & Address");
+
+    let text = "";
+    let total = 0;
+    cart.forEach(i => {
+      let p = products.find(x => x.id == i.id);
+      let sub = p.price * i.qty;
+      total += sub;
+      text += `${p.name} ×${i.qty}  Rs.${sub.toLocaleString()}\n`;
+    });
+
+    const params = {
+      customer_name: name,
+      customer_phone: phone,
+      customer_email: email || "Not provided",
+      customer_address: address,
+      order_items: text,
+      total_price: total
+    };
+
+    const btn = document.querySelector(".order-btn");
+    btn.innerText = "Sending...";
+    btn.disabled = true;
+
+    emailjs.send("service_jole3ot", "template_n8pbmd8", params)
+      .then(() => {
+        btn.innerText = "Order Placed ✓";
+        alert("Thank you! Your order has been sent.");
+        cart = [];
+        renderCart();
+        updateCartCount();
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerPhone").value = "";
+        document.getElementById("customerEmail").value = "";
+        document.getElementById("customerAddress").value = "";
+        setTimeout(() => {
+          btn.innerText = "Place Order →";
+          btn.disabled = false;
+        }, 3000);
+      })
+      .catch(() => {
+        btn.innerText = "Failed – Retry";
+        btn.disabled = false;
+        alert("Sorry, order failed. Please try again.");
+      });
+  }
+
+  // Initial calls
+  renderProducts();
+  updateCartCount();
+</script>
+</body>
+</html>
