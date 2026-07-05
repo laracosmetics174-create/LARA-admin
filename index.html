@@ -1,526 +1,829 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="google-site-verification" content="CPLAo1k0kv8fgxh1LmnlqEEj8F0bU9MukS5fr7h4af8" />
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LARA Admin Panel | AI Training</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💄</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>LARA Cosmetics | AI Beauty Assistant</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23000000'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='60' font-weight='bold' fill='white'%3EL%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Firebase compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <!-- Firebase App Check compat (NEW) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Poppins',sans-serif;background:#0a0a0a;color:#ddd;min-height:100vh;padding:20px}
-        .container{max-width:1300px;margin:0 auto}
-        h1{text-align:center;font-family:'Playfair Display',serif;color:#ccc;margin-bottom:25px;font-size:2.2rem}
-        .login-box{background:#1a1a1a;padding:35px;border-radius:20px;border:1px solid #333;max-width:420px;margin:80px auto;text-align:center}
-        .login-box h2{color:#aaa;margin-bottom:20px}
-        .login-box input{width:100%;padding:12px 15px;margin:10px 0;border:1px solid #555;border-radius:10px;background:#0a0a0a;color:#fff;font-size:1rem;outline:none}
-        .login-box input:focus{border-color:#888}
-        .admin-panel{display:none}
-        .admin-panel.active{display:block}
-        .top-bar{background:#1a1a1a;padding:15px 25px;border-radius:15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;border:1px solid #333;flex-wrap:wrap;gap:10px}
-        .welcome{font-weight:600;color:#bbb}
-        .tab-nav{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap}
-        .tab-btn{padding:12px 24px;background:#1a1a1a;border:1px solid #333;border-radius:12px;color:#ddd;cursor:pointer;font-weight:600;transition:0.2s;font-family:'Poppins',sans-serif}
-        .tab-btn.active{background:#333;border-color:#555}
-        .tab-content{display:none}
-        .tab-content.active{display:block}
-        .form-card{background:#1a1a1a;border:1px solid #333;border-radius:18px;padding:25px;margin-bottom:25px}
-        .form-card h3{color:#ccc;margin-bottom:15px;font-size:1.3rem}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
-        .form-group{margin-bottom:12px}
-        .form-group label{display:block;font-weight:600;margin-bottom:5px;color:#aaa;font-size:0.9rem}
-        .form-group input,.form-group textarea,.form-group select{width:100%;padding:10px 15px;border:1px solid #444;border-radius:10px;background:#0a0a0a;color:#fff;font-size:0.95rem;outline:none;font-family:'Poppins',sans-serif}
-        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#888}
-        .form-group textarea{height:90px;resize:vertical}
-        .colour-section{border:1px solid #333;border-radius:16px;padding:20px;background:#111;margin-bottom:15px}
-        .colour-section h4{color:#ccc;margin-bottom:15px}
-        .colour-add-area{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:15px}
-        .color-picker-btn{width:50px;height:50px;border-radius:14px;border:2px solid #555;cursor:pointer;position:relative;overflow:hidden}
-        .color-picker-btn input[type="color"]{position:absolute;top:-10px;left:-10px;width:70px;height:70px;opacity:0;cursor:pointer}
-        .colour-preview{width:40px;height:40px;border-radius:10px;border:2px solid #555}
-        .preset-colors{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}
-        .preset-swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:0.2s}
-        .preset-swatch:hover{transform:scale(1.2);border-color:#888}
-        .colour-tag-container{display:flex;flex-wrap:wrap;gap:8px;min-height:40px;padding:10px;background:#0a0a0a;border-radius:12px;border:1px dashed #555}
-        .colour-tag{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:25px;background:#1a1a1a;border:1px solid #444;font-size:0.9rem;color:#ddd}
-        .colour-tag .color-dot{width:22px;height:22px;border-radius:50%}
-        .colour-tag .remove-colour{cursor:pointer;color:#ff4444;font-weight:bold}
-        button{cursor:pointer;border:none;border-radius:10px;padding:10px 20px;font-weight:600;transition:0.2s;display:inline-flex;align-items:center;gap:6px;font-family:'Poppins',sans-serif}
-        .btn-primary{background:#444;color:#fff}
-        .btn-secondary{background:#333;color:#fff}
-        .btn-danger{background:#ff4444;color:#fff}
-        .btn-success{background:#28a745;color:#fff}
-        .btn-small{padding:6px 12px;font-size:0.8rem}
-        .product-list{margin-top:10px}
-        .product-item,.qa-item{background:#111;padding:15px 20px;border-radius:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border:1px solid #333}
-        .product-item:hover,.qa-item:hover{border-color:#777}
-        .product-item img{width:70px;height:70px;object-fit:cover;border-radius:10px}
-        .mini-colour-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:15px;background:#222;border:1px solid #444;font-size:0.75rem}
-        .mini-dot{width:12px;height:12px;border-radius:50%}
-        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
-        .stat-card{background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:20px;text-align:center}
-        .stat-card .stat-number{font-size:2.5rem;font-weight:700;color:#fff}
-        .stat-card .stat-label{color:#888;font-size:0.9rem;margin-top:5px}
+        body{font-family:'Poppins',sans-serif;background:#fff;color:#1a1a1a;overflow-x:hidden}
+        header{position:sticky;top:0;z-index:999;padding:14px 6%;background:rgba(255,255,255,0.96);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e2e2}
+        .logo{font-family:'Playfair Display',serif;font-size:2rem;font-weight:800;color:#111}
+        nav{display:flex;align-items:center;gap:28px}
+        nav a{text-decoration:none;color:#1e1e1e;font-weight:500;font-size:0.95rem;text-transform:uppercase}
+        .cart-btn{background:#f0f0f0;border:1px solid #d0d0d0;padding:10px 24px;border-radius:40px;cursor:pointer;font-weight:600}
+        .cart-badge{background:#2c2c2c;color:white;border-radius:50%;padding:2px 8px;font-size:0.7rem;margin-left:6px}
+        .hero{padding:70px 6% 35px;text-align:center}
+        .hero h1{font-family:'Playfair Display',serif;font-size:clamp(3rem,6vw,5rem);font-weight:800}
+        .search-box{margin:38px auto 0;max-width:680px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+        .search-box input,.search-box select{padding:14px 22px;border-radius:60px;border:1px solid #ccc;font-family:'Poppins',sans-serif}
+        .search-box input{flex:1;min-width:210px}
+        .products{padding:20px 6% 80px}
+        .products h2{text-align:center;font-size:2.2rem;margin-bottom:40px;font-family:'Playfair Display',serif}
+        .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:32px}
+        .card{background:#fff;border-radius:24px;padding:20px;cursor:pointer;border:1px solid #eaeaea;transition:0.2s}
+        .card:hover{transform:translateY(-6px);border-color:#cbcbcb}
+        .card img{width:100%;height:250px;object-fit:cover;border-radius:20px;background:#f8f8f8}
+        .card h3{margin-top:16px;font-weight:700}
+        .price{font-size:1.35rem;font-weight:700;margin-top:8px}
+        .colours-preview{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+        .mini-colour{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:40px;background:#f4f4f4;font-size:0.7rem}
+        .mini-dot{width:10px;height:10px;border-radius:50%}
+        .btn{margin-top:18px;width:100%;padding:12px 0;border-radius:40px;background:#111;color:white;font-weight:600;cursor:pointer;border:none}
+        .modal{display:none;position:fixed;z-index:10000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);justify-content:center;align-items:center;padding:20px}
+        .modal.show{display:flex}
+        .modal-content{background:#fff;border-radius:32px;padding:28px;max-width:550px;width:90%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 25px 40px rgba(0,0,0,0.2)}
+        .close-modal{position:absolute;right:20px;top:12px;font-size:2rem;cursor:pointer;background:none;border:none;color:#5a5a5a;transition:0.2s}
+        .close-modal:hover{color:#000}
+        #modalImage{width:100%;max-height:280px;object-fit:contain;border-radius:24px;background:#fafafa;margin-bottom:16px}
+        .modal-price{font-size:1.9rem;font-weight:800;color:#000;margin:8px 0}
+        .colour-chips{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+        .colour-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:50px;border:1px solid #ccc;background:#f9f9f9;cursor:pointer;transition:0.1s}
+        .colour-chip.selected{border:2px solid #000;background:#f0f0f0}
+        .colour-chip .dot{width:18px;height:18px;border-radius:50%}
+        .cart-sidebar{position:fixed;top:0;right:-480px;width:460px;max-width:94vw;height:100%;background:#fff;padding:24px;transition:0.35s;z-index:9999;overflow-y:auto;border-left:1px solid #e6e6e6}
+        .cart-sidebar.active{right:0}
+        .cart-item{background:#fafafa;padding:14px;border-radius:20px;margin-bottom:14px;border:1px solid #ececec}
+        .qty-btn,.remove-btn{background:#eaeef2;border:none;padding:6px 14px;border-radius:30px;cursor:pointer;font-weight:600}
+        .total-box{margin-top:18px;padding:16px;background:#f5f5f5;border-radius:24px}
+        .checkout input,.checkout textarea{width:100%;padding:12px 15px;margin-top:12px;border-radius:60px;border:1px solid #ccc;font-family:'Poppins',sans-serif}
+        .checkout textarea{border-radius:20px;resize:vertical}
+        .order-btn{margin-top:18px;width:100%;padding:14px;background:#111;border:none;border-radius:60px;color:white;font-weight:700;cursor:pointer}
+        #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1f1f1f;color:#fff;padding:12px 28px;border-radius:60px;opacity:0;transition:0.25s;pointer-events:none;z-index:10001}
+        #toast.show{opacity:1;bottom:40px}
+        .chat-widget{position:fixed;bottom:24px;right:24px;z-index:10050;font-family:'Poppins',sans-serif}
+        .chat-toggle{width:64px;height:64px;background:#111;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.2);transition:0.2s;position:relative}
+        .chat-toggle i{font-size:28px;color:white}
+        .chat-toggle:hover{transform:scale(1.05);background:#2c2c2c}
+        .chat-widget-close{position:absolute;top:-4px;right:-4px;width:22px;height:22px;background:#e74c3c;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:10}
+        .chat-window{position:absolute;bottom:80px;right:0;width:360px;max-width:85vw;height:500px;background:#fff;border-radius:28px;box-shadow:0 20px 35px rgba(0,0,0,0.2);display:flex;flex-direction:column;overflow:hidden;border:1px solid #e0e0e0;transform:scale(0);transform-origin:bottom right;opacity:0;pointer-events:none;transition:0.2s}
+        .chat-window.open{transform:scale(1);opacity:1;pointer-events:auto}
+        .chat-header{background:#111;color:white;padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
+        .chat-header h4{font-weight:600;display:flex;align-items:center;gap:8px}
+        .close-chat{background:none;border:none;color:white;font-size:1.4rem;cursor:pointer}
+        .chat-messages{flex:1;overflow-y:auto;padding:16px;background:#fcfcfc;display:flex;flex-direction:column;gap:12px}
+        .message{max-width:85%;font-size:0.85rem;line-height:1.4}
+        .bot-msg{align-self:flex-start}
+        .user-msg{align-self:flex-end}
+        .bubble{padding:10px 14px;border-radius:20px;background:#f0f0f0;color:#111;border-bottom-left-radius:4px;word-break:break-word}
+        .user-msg .bubble{background:#111;color:white;border-bottom-right-radius:4px}
+        .chat-input-area{display:flex;padding:12px;border-top:1px solid #ececec;background:white;gap:8px}
+        .chat-input-area input{flex:1;padding:12px 14px;border:1px solid #ddd;border-radius:40px;outline:none;font-family:'Poppins',sans-serif}
+        .chat-input-area button{background:#111;border:none;border-radius:40px;color:white;padding:0 18px;cursor:pointer;font-weight:600}
+        footer{text-align:center;padding:40px 20px;border-top:1px solid #e0e0e0}
+        @media(max-width:768px){.product-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.chat-window{width:320px;height:460px}}
+
+        /* LIPSTICK FINDER STYLES (unchanged) */
+        .lsf-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:100000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:16px}
+        .lsf-overlay.active{opacity:1;pointer-events:auto}
+        .lsf-modal{background:#fff;border-radius:28px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 30px 60px rgba(0,0,0,.35);padding:32px 24px 24px;transform:translateY(20px);transition:transform .3s}
+        .lsf-overlay.active .lsf-modal{transform:translateY(0)}
+        .lsf-close{position:absolute;right:18px;top:14px;font-size:1.8rem;cursor:pointer;background:none;border:none;color:#5a5a5a;transition:.2s;z-index:2}
+        .lsf-close:hover{color:#000;transform:scale(1.1)}
+        .lsf-step-indicator{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;padding:0 10px}
+        .lsf-step{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;background:#e8e8e8;color:#999;transition:all .35s;flex-shrink:0}
+        .lsf-step.completed{background:#111;color:#fff}
+        .lsf-step.active{background:#111;color:#fff;box-shadow:0 0 0 6px rgba(0,0,0,.1)}
+        .lsf-step-line{width:32px;height:2px;background:#e0e0e0;flex-shrink:0}
+        .lsf-step-line.completed{background:#111}
+        .lsf-step-body{min-height:200px}
+        .lsf-step-body h2{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;margin-bottom:8px;color:#111;text-align:center}
+        .lsf-step-body p{text-align:center;font-size:.9rem}
+        .lsf-form-group{margin-bottom:16px}
+        .lsf-form-group label{display:block;font-weight:600;margin-bottom:5px;color:#333;font-size:.85rem;text-align:left}
+        .lsf-form-group input{width:100%;padding:12px 16px;border-radius:50px;border:1px solid #ccc;font-family:'Poppins',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s}
+        .lsf-form-group input:focus{border-color:#111;box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+        .lsf-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:50px;border:none;font-weight:600;font-size:.95rem;cursor:pointer;transition:all .2s;font-family:'Poppins',sans-serif;justify-content:center}
+        .lsf-btn-primary{background:#111;color:#fff;width:100%;margin-top:8px}
+        .lsf-btn-primary:hover{background:#2c2c2c;transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.2)}
+        .lsf-btn-primary:disabled{background:#bbb;cursor:not-allowed;transform:none;box-shadow:none}
+        .lsf-btn-secondary{background:#f0f0f0;color:#111;border:1px solid #ddd}
+        .lsf-btn-secondary:hover{background:#e4e4e4}
+        .lsf-photo-options{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+        .lsf-photo-option{display:flex;flex-direction:column;align-items:center;gap:10px;padding:28px 32px;border-radius:20px;border:2px dashed #ccc;background:#fafafa;cursor:pointer;transition:all .25s;font-family:'Poppins',sans-serif;font-weight:500;color:#333;min-width:140px}
+        .lsf-photo-option:hover{border-color:#111;background:#f5f5f5;transform:translateY(-3px)}
+        .lsf-camera-container{text-align:center;margin-top:10px}
+        .lsf-camera-container video{width:100%;max-width:360px;border-radius:20px;border:2px solid #e0e0e0;margin-bottom:12px;background:#000}
+        .lsf-preview-container{text-align:center;margin-top:10px}
+        .lsf-preview-container img{width:100%;max-width:300px;border-radius:20px;border:2px solid #e0e0e0;object-fit:cover;max-height:320px}
+        .lsf-analyzing{text-align:center;padding:20px 0}
+        .lsf-spinner-container{display:flex;flex-direction:column;align-items:center;gap:16px}
+        .lsf-spinner{width:56px;height:56px;border:5px solid #e0e0e0;border-top:5px solid #111;border-radius:50%;animation:lsfSpin .9s linear infinite}
+        @keyframes lsfSpin{to{transform:rotate(360deg)}}
+        .lsf-progress-bar{width:100%;max-width:300px;height:6px;background:#e8e8e8;border-radius:10px;overflow:hidden;margin-top:8px}
+        .lsf-progress-fill{height:100%;background:#111;border-radius:10px;width:0%;transition:width .3s}
+        .lsf-results-header{text-align:center;margin-bottom:20px}
+        .lsf-skin-badge{display:inline-flex;align-items:center;gap:10px;padding:10px 22px;border-radius:50px;background:#f5f5f5;border:1px solid #e0e0e0;margin:6px;font-weight:600;font-size:.9rem}
+        .lsf-skin-dot{width:20px;height:20px;border-radius:50%;border:2px solid #ccc}
+        .lsf-results-grid{display:flex;flex-direction:column;gap:14px;margin-top:16px}
+        .lsf-result-card{display:flex;align-items:center;gap:14px;background:#fafafa;border:1px solid #eaeaea;border-radius:18px;padding:14px;transition:.2s;cursor:pointer}
+        .lsf-result-card:hover{border-color:#cbcbcb;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+        .lsf-result-card img{width:72px;height:72px;object-fit:cover;border-radius:14px;flex-shrink:0;background:#f0f0f0}
+        .lsf-result-info{flex:1;min-width:0}
+        .lsf-result-info h4{font-weight:700;font-size:.95rem;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .lsf-shade-name{font-size:.8rem;color:#666}
+        .lsf-price{font-weight:700;font-size:1rem;margin-top:4px}
+        .lsf-stars{color:#f5a623;font-size:.85rem;letter-spacing:1px}
+        .lsf-score-badge{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:20px;background:#e8e8e8;color:#555;white-space:nowrap}
+        .lsf-result-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+        .lsf-btn-outline{background:transparent;border:1px solid #ccc;color:#333;padding:8px 16px;border-radius:50px;cursor:pointer;font-weight:600;font-size:.78rem;transition:.2s;font-family:'Poppins',sans-serif}
+        .lsf-btn-outline:hover{background:#f5f5f5;border-color:#111}
+        .lsf-error{text-align:center;padding:20px;color:#c0392b}
+        .lsf-error i{font-size:3rem;display:block;margin-bottom:12px}
         .hidden{display:none!important}
-        @media(max-width:768px){.form-row{grid-template-columns:1fr}}
+        @media(max-width:600px){.lsf-modal{padding:20px 14px 16px;border-radius:22px;max-height:92vh}.lsf-step{width:28px;height:28px;font-size:.7rem}.lsf-step-line{width:20px}.lsf-photo-option{padding:20px 18px;min-width:110px;font-size:.8rem}.lsf-result-card{flex-wrap:wrap}.lsf-result-actions{flex-direction:row;width:100%;justify-content:flex-end}.lsf-result-card img{width:56px;height:56px}}
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>🖤 LARA Admin Panel</h1>
-    <div class="login-box" id="loginBox">
-        <h2><i class="fas fa-lock"></i> Admin Login</h2>
-        <input type="email" id="loginEmail" placeholder="Admin Email" />
-        <input type="password" id="loginPassword" placeholder="Password" />
-        <button class="btn-primary" onclick="login()" style="width:100%;justify-content:center;"><i class="fas fa-sign-in-alt"></i> Login</button>
-    </div>
-
-    <div class="admin-panel" id="adminPanel">
-        <div class="top-bar">
-            <span class="welcome"><i class="fas fa-user-circle"></i> Welcome, <span id="adminEmail">Admin</span></span>
-            <button class="btn-secondary" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <header>
+        <div class="logo"><i class="fas fa-feather-alt"></i> LARA</div>
+        <nav>
+            <a href="#products">Shop</a>
+            <a href="#about">About</a>
+            <button class="cart-btn" onclick="toggleCart()"><i class="fas fa-shopping-cart"></i> Cart <span class="cart-badge" id="cartCount">0</span></button>
+        </nav>
+    </header>
+    <section class="hero">
+        <h1>Effortless Elegance</h1>
+        <p>Premium Cosmetics • Lipsticks • Skincare • Perfumes — Ask our AI beauty assistant anything!</p>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search for lipstick, perfume, skincare..." maxlength="200" />
+            <select id="categoryFilter"><option value="all">All Categories</option></select>
         </div>
-
-        <!-- Tab Navigation -->
-        <div class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab('products')"><i class="fas fa-box"></i> Products</button>
-            <button class="tab-btn" onclick="switchTab('training')"><i class="fas fa-brain"></i> AI Training</button>
-            <button class="tab-btn" onclick="switchTab('unanswered')"><i class="fas fa-question-circle"></i> Unanswered Questions</button>
-            <!-- 🔥 New Shade Finder Tab -->
-            <button class="tab-btn" id="shadeFinderTabBtn" onclick="switchTab('shadeFinder')"><i class="fas fa-magic"></i> AI Shade Finder</button>
+    </section>
+    <section class="products" id="products">
+        <h2>Our Collection</h2>
+        <div class="product-grid" id="productGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading luxurious products...</div>
         </div>
+    </section>
+    <section id="about" class="hero" style="padding:20px 6% 50px;">
+        <h2 style="font-size:2rem;">About LARA Cosmetics</h2>
+        <p style="max-width:780px;margin:0 auto;line-height:1.7;">LARA Cosmetics brings you cruelty‑free, high‑performance beauty essentials. Fast delivery across Sri Lanka.</p>
+    </section>
+    <footer>© 2025 LARA Cosmetics. All Rights Reserved. | Made with ❤️ in Sri Lanka</footer>
 
-        <!-- Products Tab (unchanged) -->
-        <div class="tab-content active" id="productsTab">
-            <div class="form-card">
-                <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Add New Product</h3>
-                <input type="hidden" id="editProductId" />
-                <div class="form-row">
-                    <div class="form-group"><label>Product Name *</label><input type="text" id="productName" placeholder="e.g., Matte Lipstick" /></div>
-                    <div class="form-group"><label>Category *</label><select id="productCategory"><option value="">Select</option><option value="Lipstick">Lipstick</option><option value="Skincare">Skincare</option><option value="Makeup">Makeup</option><option value="Perfume">Perfume</option></select></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Price (Rs.) *</label><input type="number" id="productPrice" step="0.01" /></div>
-                    <div class="form-group"><label>Image URL</label><input type="url" id="productImage" /></div>
-                </div>
-
-                <div class="colour-section">
-                    <h4><i class="fas fa-palette"></i> Product Colours</h4>
-                    <div class="preset-colors">
-                        <div class="preset-swatch" style="background:#FF0000;" onclick="selectPreset('#FF0000','Red')"></div>
-                        <div class="preset-swatch" style="background:#000000;" onclick="selectPreset('#000000','Black')"></div>
-                        <div class="preset-swatch" style="background:#FFFFFF;border:1px solid #555;" onclick="selectPreset('#FFFFFF','White')"></div>
-                    </div>
-                    <div class="colour-add-area">
-                        <div class="color-picker-btn" id="colorPickerPreview" style="background:#888;"><input type="color" id="colorPicker" value="#888888" onchange="onColorPickerChange()" /></div>
-                        <input type="text" class="colour-name-input" id="colourNameInput" placeholder="Colour name" style="padding:10px;border:1px solid #555;border-radius:10px;background:#0a0a0a;color:#fff;" />
-                        <input type="text" class="colour-hex-input" id="colourHexInput" placeholder="#888888" maxlength="7" oninput="onHexInputChange()" style="padding:10px;border:1px solid #555;border-radius:10px;background:#0a0a0a;color:#fff;" />
-                        <div class="colour-preview" id="colourPreview" style="background:#888;"></div>
-                        <button class="add-colour-btn" onclick="addColour()" style="padding:10px 20px;background:#444;border:none;border-radius:10px;color:#fff;font-weight:700;"><i class="fas fa-plus"></i> Add</button>
-                    </div>
-                    <div class="colour-tag-container" id="colourTags"></div>
-                </div>
-
-                <div class="form-group"><label>Description</label><textarea id="productDescription"></textarea></div>
-                <div style="display:flex;gap:10px;margin-top:10px;">
-                    <button class="btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> <span id="saveBtnText">Save Product</span></button>
-                    <button class="btn-secondary hidden" id="cancelEditBtn" onclick="cancelEdit()"><i class="fas fa-times"></i> Cancel</button>
-                </div>
-            </div>
-
-            <div class="form-card">
-                <h3><i class="fas fa-list"></i> Product List (<span id="productCount">0</span>)</h3>
-                <div class="product-list" id="productList"><p style="color:#888;">Loading...</p></div>
-            </div>
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h2><i class="fas fa-shopping-bag"></i> Your Bag</h2>
+            <button class="close-btn" onclick="toggleCart()">✖</button>
         </div>
-
-        <!-- AI Training Tab (unchanged) -->
-        <div class="tab-content" id="trainingTab">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="trainedCount">0</div>
-                    <div class="stat-label">Trained Q&A Pairs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="unansweredCount">0</div>
-                    <div class="stat-label">Unanswered Questions</div>
-                </div>
-            </div>
-
-            <div class="form-card">
-                <h3><i class="fas fa-brain"></i> Train AI Assistant</h3>
-                <p style="color:#888;margin-bottom:15px;">Add questions & answers to make the chatbot smarter</p>
-                <div class="form-group">
-                    <label>Question (What customer might ask) *</label>
-                    <input type="text" id="trainingQuestion" placeholder="e.g., What lipstick shades do you have?" />
-                </div>
-                <div class="form-group">
-                    <label>Keywords (comma separated, helps matching) *</label>
-                    <input type="text" id="trainingKeywords" placeholder="e.g., lipstick, shades, colours, lip color" />
-                </div>
-                <div class="form-group">
-                    <label>Answer *</label>
-                    <textarea id="trainingAnswer" placeholder="e.g., We have Matte Lipstick in Red, Pink, and Nude shades! Prices start from Rs. 1,500. 💄"></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Related Product (optional)</label>
-                        <select id="trainingProduct"><option value="">None</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Priority</label>
-                        <select id="trainingPriority">
-                            <option value="normal">Normal</option>
-                            <option value="high">High Priority</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="btn-primary" onclick="saveTraining()"><i class="fas fa-save"></i> Save Training</button>
-            </div>
-
-            <div class="form-card">
-                <h3><i class="fas fa-list"></i> Trained Responses</h3>
-                <div id="trainingList"><p style="color:#888;">Loading...</p></div>
-            </div>
-        </div>
-
-        <!-- Unanswered Questions Tab (unchanged) -->
-        <div class="tab-content" id="unansweredTab">
-            <div class="form-card">
-                <h3><i class="fas fa-question-circle"></i> Unanswered Customer Questions</h3>
-                <p style="color:#888;margin-bottom:15px;">These are questions the AI couldn't answer. Train them to improve!</p>
-                <div id="unansweredList"><p style="color:#888;">Loading...</p></div>
-            </div>
-        </div>
-
-        <!-- 🔥 AI Shade Finder Tab (new) -->
-        <div class="tab-content" id="shadeFinderTab">
-            <div class="stats-grid" id="shadeFinderStats">
-                <div class="stat-card">
-                    <div class="stat-number" id="sfTotalCustomers">0</div>
-                    <div class="stat-label">Total Customers</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="sfTotalRecommendations">0</div>
-                    <div class="stat-label">Total Recommendations</div>
-                </div>
-            </div>
-
-            <div class="form-card">
-                <h3><i class="fas fa-search"></i> Search Recommendations</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Search by Name</label>
-                        <input type="text" id="sfSearchName" placeholder="Customer name..." />
-                    </div>
-                    <div class="form-group">
-                        <label>Search by Phone</label>
-                        <input type="text" id="sfSearchPhone" placeholder="Phone number..." />
-                    </div>
-                </div>
-                <button class="btn-primary" onclick="window.LARAShadeFinderAdmin.loadData()"><i class="fas fa-search"></i> Search</button>
-                <button class="btn-secondary" onclick="window.LARAShadeFinderAdmin.clearSearch()" style="margin-left:8px;"><i class="fas fa-times"></i> Clear</button>
-            </div>
-
-            <div class="form-card">
-                <h3><i class="fas fa-list"></i> Recommendations List</h3>
-                <div id="sfRecommendationsList"><p style="color:#888;">Loading...</p></div>
-            </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="total-box"><h3>Total: Rs. <span id="cartTotal">0.00</span></h3></div>
+        <div class="checkout">
+            <h3 style="margin-bottom:4px;">Delivery details</h3>
+            <input type="text" id="customerName" placeholder="Full Name *" maxlength="100" autocomplete="name" />
+            <input type="tel" id="customerPhone" placeholder="WhatsApp Number (optional)" maxlength="20" autocomplete="tel" />
+            <input type="email" id="customerEmail" placeholder="Email Address *" maxlength="150" autocomplete="email" />
+            <textarea id="customerAddress" placeholder="Delivery Address *" rows="2" maxlength="300"></textarea>
+            <button class="order-btn" onclick="placeOrder()"><i class="fas fa-envelope"></i> Place Order via Email</button>
         </div>
     </div>
-</div>
 
-<script>
-    // ==================== FIREBASE CONFIG ====================
-    const firebaseConfig={apiKey:"AIzaSyAOqKpGbesbgeAfA2J_QGfomjTiY_FIfnA",authDomain:"lara-f5aed.firebaseapp.com",projectId:"lara-f5aed",storageBucket:"lara-f5aed.firebasestorage.app",messagingSenderId:"942336215471",appId:"1:942336215471:web:7971423ac9d4cff776075a"};
-    firebase.initializeApp(firebaseConfig);
-    const db=firebase.firestore(),auth=firebase.auth();
-    const storage = firebase.storage(); // for admin image deletion
+    <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">×</button>
+            <img id="modalImage" src="" alt="Product detail" loading="lazy" />
+            <h2 id="modalName"></h2>
+            <p id="modalCategory" style="color:#5a5a5a;margin-top:4px;"></p>
+            <div class="modal-price">Rs. <span id="modalPrice">0</span></div>
+            <div class="colour-section"><h4 style="margin-top:8px;">Shade / Colour</h4><div id="modalColours" class="colour-chips"></div></div>
+            <div id="modalDetails" style="margin-top:15px;color:#3a3a3a;line-height:1.5;"></div>
+            <button class="btn" style="margin-top:24px;" onclick="addToCartFromModal()"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+        </div>
+    </div>
+    <div id="toast"></div>
 
-    let editingProductId=null,currentColours=[],currentTab='products';
+    <!-- Chatbot Widget -->
+    <div class="chat-widget" id="chatWidget">
+        <div class="chat-toggle" id="chatToggleBtn"><i class="fas fa-robot"></i><span class="chat-widget-close" id="chatWidgetCloseBtn">✕</span></div>
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header"><h4><i class="fas fa-magic"></i> LARA Beauty AI</h4><button class="close-chat" id="closeChatBtn">✕</button></div>
+            <div class="chat-messages" id="chatMessages"><div class="message bot-msg"><div class="bubble">✨ Hello! I'm LARA's AI assistant. Ask me about products, prices, shades, new arrivals, or anything beauty! 💄</div></div></div>
+            <div class="chat-input-area"><input type="text" id="chatInput" placeholder="e.g., lipsticks under 3000..." maxlength="500" autocomplete="off" /><button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button></div>
+        </div>
+    </div>
 
-    // Tab switching (updated to include shadeFinder)
-    window.switchTab=(tab)=>{
-        currentTab=tab;
-        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-        event.target.closest('.tab-btn').classList.add('active');
-        document.getElementById(tab+'Tab').classList.add('active');
-        if(tab==='training'){loadTraining();loadProductsForSelect();}
-        if(tab==='unanswered')loadUnanswered();
-        if(tab==='shadeFinder')loadShadeFinderData();
-    };
+    <!-- Firebase Storage Helper -->
+    <script>
+        const LARA_STORAGE = (function () {
+            let storageAvailable = false, storage = null;
+            try { if (typeof firebase !== 'undefined' && firebase.storage) { storage = firebase.storage(); storageAvailable = true; } } catch(e) {}
+            async function uploadImage(base64Data, folder = 'lipstick-finder/', fileName = null) {
+                if (!fileName) fileName = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2,8);
+                if (folder && !folder.endsWith('/')) folder += '/';
+                const fullPath = folder + fileName + '.jpg';
+                if (!storageAvailable || !storage) return base64Data.length > 500000 ? base64Data.substring(0,500000) : base64Data;
+                try {
+                    const blob = (() => {
+                        let base64Clean = base64, mimeType = 'image/jpeg';
+                        if (base64.startsWith('data:')) {
+                            const matches = base64.match(/^data:([a-zA-Z0-9/+\-.]+);base64,(.+)$/);
+                            if (matches && matches.length === 3) { mimeType = matches[1]; base64Clean = matches[2]; }
+                            else base64Clean = base64.split(',')[1] || base64;
+                        }
+                        const byteChars = atob(base64Clean), byteArrays = [], sliceSize = 512;
+                        for (let offset = 0; offset < byteChars.length; offset += sliceSize) {
+                            const slice = byteChars.slice(offset, offset + sliceSize), byteNumbers = new Array(slice.length);
+                            for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                            byteArrays.push(new Uint8Array(byteNumbers));
+                        }
+                        return new Blob(byteArrays, { type: mimeType });
+                    })();
+                    const uploadTask = await storage.ref(fullPath).put(blob, { contentType: 'image/jpeg' });
+                    return await uploadTask.ref.getDownloadURL();
+                } catch(e) { return base64Data.length > 500000 ? base64Data.substring(0,500000) : base64Data; }
+            }
+            async function deleteImage(url) {
+                if (!storageAvailable || !storage || !url) return false;
+                try {
+                    if (url.includes('firebasestorage.googleapis.com')) {
+                        const pathMatch = url.match(/\/o\/(.+?)\?/);
+                        if (pathMatch) { await storage.ref(decodeURIComponent(pathMatch[1])).delete(); return true; }
+                    }
+                    if (url.includes('lipstick-finder/')) { await storage.ref(url).delete(); return true; }
+                    return false;
+                } catch(e) { return false; }
+            }
+            return { uploadImage, deleteImage, isAvailable: () => storageAvailable };
+        })();
+    </script>
 
-    // Color picker functions (unchanged)
-    window.onColorPickerChange=()=>{const hex=document.getElementById('colorPicker').value.toUpperCase();document.getElementById('colourHexInput').value=hex;document.getElementById('colourPreview').style.background=hex;document.getElementById('colorPickerPreview').style.background=hex;};
-    window.onHexInputChange=()=>{const hexInput=document.getElementById('colourHexInput');let hex=hexInput.value.toUpperCase();if(hex&&!hex.startsWith('#')){hex='#'+hex;hexInput.value=hex;}if(/^#[0-9A-F]{6}$/.test(hex)){document.getElementById('colorPicker').value=hex;document.getElementById('colourPreview').style.background=hex;document.getElementById('colorPickerPreview').style.background=hex;}};
-    window.selectPreset=(hex,name)=>{document.getElementById('colorPicker').value=hex;document.getElementById('colourHexInput').value=hex;document.getElementById('colourNameInput').value=name;document.getElementById('colourPreview').style.background=hex;document.getElementById('colorPickerPreview').style.background=hex;};
-    window.addColour=()=>{const name=document.getElementById('colourNameInput').value.trim();let hex=document.getElementById('colourHexInput').value.trim().toUpperCase();if(!name||!hex||!/^#[0-9A-F]{6}$/.test(hex))return alert('Enter valid name and hex');if(currentColours.some(c=>c.name===name&&c.hex===hex))return alert('Already exists');currentColours.push({name,hex});renderColourTags();document.getElementById('colourNameInput').value='';document.getElementById('colourHexInput').value='#888888';document.getElementById('colourNameInput').focus();};
-    window.removeColour=(i)=>{currentColours.splice(i,1);renderColourTags();};
-    function renderColourTags(){document.getElementById('colourTags').innerHTML=currentColours.map((c,i)=>`<span class="colour-tag"><span class="color-dot" style="background:${c.hex};"></span>${c.name} <small style="color:#888;">${c.hex}</small> <span class="remove-colour" onclick="removeColour(${i})">×</span></span>`).join('');}
+    <!-- Lipstick Finder Script -->
+    <script>
+        (function () {
+            'use strict';
+            let currentStep = 1, customerName = '', customerPhone = '', capturedImageData = null;
+            let detectedSkinTone = null, detectedUndertone = null, recommendedProducts = [], cameraStream = null, isInitialized = false;
+            let overlay, modal, stepIndicator, stepContent, closeBtn;
+            const SKIN_TONES = [
+                { name: 'Very Fair', minL: 82, maxL: 100, hex: '#fdf0e3' },
+                { name: 'Fair', minL: 72, maxL: 82, hex: '#f5dcc3' },
+                { name: 'Light', minL: 60, maxL: 72, hex: '#e8c39e' },
+                { name: 'Medium', minL: 46, maxL: 60, hex: '#c89460' },
+                { name: 'Tan', minL: 34, maxL: 46, hex: '#a67044' },
+                { name: 'Deep', minL: 22, maxL: 34, hex: '#6b3f2b' },
+                { name: 'Dark', minL: 0, maxL: 22, hex: '#3d1f14' }
+            ];
+            function init() { if(isInitialized) return; injectModal(); cacheElements(); bindEvents(); injectHeroButton(); isInitialized = true; }
+            function injectModal() {
+                const html = `<div class="lsf-overlay" id="lsfOverlay"><div class="lsf-modal"><button class="lsf-close" id="lsfClose">×</button><div class="lsf-step-indicator" id="lsfStepIndicator"><span class="lsf-step" data-step="1">1</span><span class="lsf-step-line"></span><span class="lsf-step" data-step="2">2</span><span class="lsf-step-line"></span><span class="lsf-step" data-step="3">3</span><span class="lsf-step-line"></span><span class="lsf-step" data-step="4">4</span></div><div class="lsf-step-content" id="lsfStepContent"></div></div></div>`;
+                const container = document.createElement('div'); container.innerHTML = html; document.body.appendChild(container.firstElementChild);
+            }
+            function injectHeroButton() {
+                const heroSection = document.querySelector('.hero'); if(!heroSection || document.getElementById('lsfHeroBtn')) return;
+                const btnContainer = document.createElement('div'); btnContainer.style.cssText = 'text-align:center;margin-top:24px;';
+                btnContainer.innerHTML = `<button id="lsfHeroBtn" class="lsf-btn lsf-btn-primary" style="max-width:380px;width:auto;display:inline-flex;"><i class="fas fa-magic"></i> Find Your Perfect Lipstick Shade ✨</button>`;
+                heroSection.appendChild(btnContainer);
+                document.getElementById('lsfHeroBtn').addEventListener('click', openFinder);
+            }
+            function cacheElements() { overlay = document.getElementById('lsfOverlay'); modal = overlay?.querySelector('.lsf-modal'); stepIndicator = document.getElementById('lsfStepIndicator'); stepContent = document.getElementById('lsfStepContent'); closeBtn = document.getElementById('lsfClose'); }
+            function bindEvents() {
+                if(closeBtn) closeBtn.addEventListener('click', closeFinder);
+                if(overlay) overlay.addEventListener('click', e => { if(e.target === overlay) closeFinder(); });
+                document.addEventListener('keydown', e => { if(e.key === 'Escape' && overlay?.classList.contains('active')) closeFinder(); });
+            }
+            function openFinder() { resetState(); overlay?.classList.add('active'); renderStep(1); document.body.style.overflow = 'hidden'; }
+            function closeFinder() { stopCamera(); overlay?.classList.remove('active'); document.body.style.overflow = ''; setTimeout(resetState, 400); }
+            function resetState() { currentStep = 1; customerName = ''; customerPhone = ''; capturedImageData = null; detectedSkinTone = null; detectedUndertone = null; recommendedProducts = []; stopCamera(); }
+            function stopCamera() { if(cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; } }
+            function renderStep(step) { currentStep = step; updateStepIndicator(step); switch(step) { case 1: renderStep1(); break; case 2: renderStep2(); break; case 3: renderStep3(); break; case 4: renderStep4(); break; } if(modal) modal.scrollTop = 0; }
+            function updateStepIndicator(activeStep) {
+                if(!stepIndicator) return;
+                stepIndicator.querySelectorAll('.lsf-step').forEach((s,i) => { const num = parseInt(s.dataset.step); s.classList.remove('active','completed'); if(num<activeStep) s.classList.add('completed'); if(num===activeStep) s.classList.add('active'); });
+                stepIndicator.querySelectorAll('.lsf-step-line').forEach((l,i) => { l.classList.remove('completed'); if(i+1<activeStep) l.classList.add('completed'); });
+            }
+            function renderStep1() {
+                stepContent.innerHTML = `<div class="lsf-step-body"><h2>✨ Find Your Perfect Lipstick Shade</h2><p style="color:#666;margin-bottom:24px;">Let our AI analyze your skin tone and recommend the best lipsticks for you.</p><div class="lsf-form-group"><label>Full Name *</label><input type="text" id="lsfName" placeholder="Enter your full name" maxlength="100" value="${escapeAttr(customerName)}" /><small id="lsfNameError" style="color:#c0392b;display:none;">Please enter your name.</small></div><div class="lsf-form-group"><label>Phone Number *</label><input type="tel" id="lsfPhone" placeholder="e.g., +94 77 123 4567" maxlength="20" value="${escapeAttr(customerPhone)}" /><small id="lsfPhoneError" style="color:#c0392b;display:none;">Please enter your phone number.</small></div><button class="lsf-btn lsf-btn-primary" id="lsfStep1Next">Continue <i class="fas fa-arrow-right"></i></button></div>`;
+                document.getElementById('lsfStep1Next').addEventListener('click', handleStep1);
+                document.getElementById('lsfName').addEventListener('keypress', e => { if(e.key==='Enter') document.getElementById('lsfPhone').focus(); });
+                document.getElementById('lsfPhone').addEventListener('keypress', e => { if(e.key==='Enter') handleStep1(); });
+                setTimeout(() => document.getElementById('lsfName').focus(), 300);
+            }
+            function handleStep1() {
+                const name = document.getElementById('lsfName').value.trim(), phone = document.getElementById('lsfPhone').value.trim();
+                const nameErr = document.getElementById('lsfNameError'), phoneErr = document.getElementById('lsfPhoneError');
+                let valid = true;
+                if(!name) { nameErr.style.display='block'; valid=false; } else nameErr.style.display='none';
+                if(!phone) { phoneErr.style.display='block'; valid=false; } else phoneErr.style.display='none';
+                if(!valid) return;
+                customerName=name; customerPhone=phone;
+                saveCustomerData(name,phone);
+                renderStep(2);
+            }
+            async function saveCustomerData(name,phone) { try { if(typeof db!=='undefined') await db.collection('lipstickCustomers').add({name,phone,createdAt:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {} }
+            function renderStep2() {
+                stepContent.innerHTML = `<div class="lsf-step-body"><h2>📷 Capture Your Photo</h2><p style="color:#666;margin-bottom:16px;">Take a selfie or upload a photo for skin tone analysis.</p><div class="lsf-photo-options" id="lsfPhotoOptions"><button class="lsf-photo-option" id="lsfCameraBtn"><i class="fas fa-camera" style="font-size:2rem;"></i><span>Take Photo</span></button><button class="lsf-photo-option" id="lsfUploadBtn"><i class="fas fa-folder-open" style="font-size:2rem;"></i><span>Upload Photo</span></button></div><input type="file" id="lsfFileInput" accept="image/*" capture="user" style="display:none;" /><div class="lsf-camera-container hidden" id="lsfCameraContainer"><video id="lsfCameraVideo" autoplay playsinline muted></video><canvas id="lsfCameraCanvas" style="display:none;"></canvas><button class="lsf-btn lsf-btn-secondary" id="lsfCaptureBtn" style="margin:0 auto;"><i class="fas fa-camera"></i> Capture</button></div><div class="lsf-preview-container hidden" id="lsfPreviewContainer"><img id="lsfPreviewImage" src="" alt="Preview" /><div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;"><button class="lsf-btn lsf-btn-secondary" id="lsfRetakeBtn"><i class="fas fa-redo"></i> Retake</button><button class="lsf-btn lsf-btn-primary" id="lsfStep2Next">Continue <i class="fas fa-arrow-right"></i></button></div></div><small id="lsfPhotoError" style="color:#c0392b;display:none;text-align:center;margin-top:8px;">Please capture or upload a photo first.</small></div>`;
+                bindStep2Events();
+            }
+            function bindStep2Events() {
+                const photoOpts = document.getElementById('lsfPhotoOptions'), camCont = document.getElementById('lsfCameraContainer'), prevCont = document.getElementById('lsfPreviewContainer');
+                document.getElementById('lsfCameraBtn').addEventListener('click', () => openCamera(photoOpts, camCont, prevCont));
+                document.getElementById('lsfUploadBtn').addEventListener('click', () => document.getElementById('lsfFileInput').click());
+                document.getElementById('lsfFileInput').addEventListener('change', e => { const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{capturedImageData=ev.target.result; showPreview(ev.target.result,photoOpts,camCont,prevCont); stopCamera();}; r.readAsDataURL(f); });
+                document.getElementById('lsfCaptureBtn').addEventListener('click', () => captureFromCamera(photoOpts, camCont, prevCont));
+                document.getElementById('lsfRetakeBtn').addEventListener('click', () => { capturedImageData=null; prevCont.classList.add('hidden'); photoOpts.classList.remove('hidden'); camCont.classList.add('hidden'); document.getElementById('lsfPhotoError').style.display='none'; stopCamera(); });
+                document.getElementById('lsfStep2Next').addEventListener('click', () => { if(!capturedImageData) { document.getElementById('lsfPhotoError').style.display='block'; return; } document.getElementById('lsfPhotoError').style.display='none'; stopCamera(); renderStep(3); startAnalysis(); });
+            }
+            async function openCamera(photoOpts, camCont, prevCont) { stopCamera(); try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 640 } }, audio: false }); document.getElementById('lsfCameraVideo').srcObject = cameraStream; photoOpts.classList.add('hidden'); camCont.classList.remove('hidden'); prevCont.classList.add('hidden'); capturedImageData=null; document.getElementById('lsfPhotoError').style.display='none'; } catch(e) { alert('Camera access denied. Please upload a photo.'); } }
+            function captureFromCamera(photoOpts, camCont, prevCont) { const video = document.getElementById('lsfCameraVideo'), canvas = document.getElementById('lsfCameraCanvas'); canvas.width = video.videoWidth||640; canvas.height = video.videoHeight||640; canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height); capturedImageData = canvas.toDataURL('image/jpeg',0.85); showPreview(capturedImageData, photoOpts, camCont, prevCont); stopCamera(); }
+            function showPreview(dataUrl, photoOpts, camCont, prevCont) { document.getElementById('lsfPreviewImage').src = dataUrl; photoOpts.classList.add('hidden'); camCont.classList.add('hidden'); prevCont.classList.remove('hidden'); document.getElementById('lsfPhotoError').style.display='none'; }
+            function renderStep3() { stepContent.innerHTML = `<div class="lsf-step-body lsf-analyzing"><div class="lsf-spinner-container"><div class="lsf-spinner"></div><h3>Analyzing Your Skin Tone...</h3><p style="color:#888;">Our AI is detecting your perfect shade match</p><div class="lsf-progress-bar"><div class="lsf-progress-fill" id="lsfProgressFill"></div></div><small id="lsfAnalysisStatus" style="color:#aaa;">Sampling skin pixels...</small></div></div>`; }
+            async function startAnalysis() {
+                const fill = document.getElementById('lsfProgressFill'), status = document.getElementById('lsfAnalysisStatus');
+                const upd = (p,m) => { if(fill) fill.style.width=p+'%'; if(status) status.textContent=m; };
+                upd(10,'Loading image...'); await sleep(400);
+                upd(25,'Sampling skin pixels...'); await sleep(500);
+                const result = await analyzeSkinTone(capturedImageData); detectedSkinTone=result.skinTone; detectedUndertone=result.undertone; upd(45,'Skin tone: '+detectedSkinTone+' | Undertone: '+detectedUndertone); await sleep(600);
+                upd(60,'Searching lipstick products...'); await sleep(500);
+                recommendedProducts = await findBestMatches(detectedSkinTone, detectedUndertone); upd(85,'Finding best matches...'); await sleep(500);
+                upd(95,'Finalizing...'); await sleep(300); upd(100,'Analysis complete!'); await sleep(400);
+                await saveRecommendation(); renderStep(4);
+            }
+            function analyzeSkinTone(imageData) { return new Promise(resolve => { const canvas=document.createElement('canvas'), ctx=canvas.getContext('2d'), img=new Image(); img.onload=()=>{ const maxDim=200; let w=img.width, h=img.height; const ratio=Math.min(maxDim/w, maxDim/h); w=Math.round(w*ratio); h=Math.round(h*ratio); canvas.width=w; canvas.height=h; ctx.drawImage(img,0,0,w,h); const sampleX=Math.floor(w*0.3), sampleY=Math.floor(h*0.25), sampleW=Math.floor(w*0.4), sampleH=Math.floor(h*0.45); const imgData=ctx.getImageData(sampleX,sampleY,sampleW,sampleH).data; let r=0,g=0,b=0,cnt=0; for(let i=0;i<imgData.length;i+=12){ const br=(imgData[i]+imgData[i+1]+imgData[i+2])/3; if(br<25||br>245) continue; r+=imgData[i]; g+=imgData[i+1]; b+=imgData[i+2]; cnt++; } if(cnt<10){ const fd=ctx.getImageData(0,0,w,h).data; r=0;g=0;b=0;cnt=0; for(let i=0;i<fd.length;i+=12){ const br=(fd[i]+fd[i+1]+fd[i+2])/3; if(br<20||br>250) continue; r+=fd[i]; g+=fd[i+1]; b+=fd[i+2]; cnt++; } } if(cnt===0) return resolve({skinTone:'Medium',undertone:'Neutral'}); const avgR=r/cnt, avgG=g/cnt, avgB=b/cnt; const hsl=rgbToHsl(avgR,avgG,avgB), lightness=hsl[2]*100; let skin='Medium'; SKIN_TONES.forEach(t=>{if(lightness>=t.minL&&lightness<t.maxL) skin=t.name;}); if(lightness>=100) skin='Very Fair'; if(lightness<0) skin='Dark'; const rb=avgR/(avgB||1); let undertone=rb>1.25?'Warm':rb<0.9?'Cool':'Neutral'; resolve({skinTone:skin,undertone}); }; img.onerror=()=>resolve({skinTone:'Medium',undertone:'Neutral'}); img.src=imageData; }); }
+            function rgbToHsl(r,g,b){ r/=255;g/=255;b/=255; const mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2; let h=0,s=0; if(mx!==mn){ const d=mx-mn; s=l>0.5?d/(2-mx-mn):d/(mx+mn); switch(mx){ case r: h=((g-b)/d+(g<b?6:0))/6; break; case g: h=((b-r)/d+2)/6; break; case b: h=((r-g)/d+4)/6; break; } } return [h,s,l]; }
+            async function findBestMatches(skinTone, undertone) {
+                let prods = [];
+                try { if(typeof db!=='undefined'){ const snap = await db.collection('products').where('category','==','Lipstick').get(); snap.forEach(d=>{ const data=d.data(); prods.push({id:d.id,name:data.name,price:data.price||0,image:data.image||'',colours:data.colours||[],description:data.description||''}); }); } } catch(e) {}
+                if(!prods.length && typeof products!=='undefined') prods = products.filter(p=>p.category?.toLowerCase()==='lipstick');
+                if(!prods.length) return [];
+                const scored = prods.map(p=>{ let bestScore=0, bestShade=null; (p.colours||[]).forEach(c=>{ const shadeName=(typeof c==='object'?c.name:String(c)).toLowerCase(); const shadeHex=typeof c==='object'?c.hex:'#000000'; const sc=calcShadeScore(shadeName,shadeHex,skinTone,undertone); if(sc>bestScore){ bestScore=sc; bestShade=typeof c==='object'?c:{name:String(c),hex:'#000000'}; } }); if(!bestShade) { bestScore=3; bestShade={name:'Universal',hex:'#cc8899'}; } return {...p, matchScore:bestScore, bestShade, bestShadeScore:bestScore}; });
+                return scored.sort((a,b)=>b.matchScore-a.matchScore).slice(0,6);
+            }
+            function calcShadeScore(shadeName, shadeHex, skinTone, undertone) {
+                let score=3; const lower=shadeName.toLowerCase(); const hex=shadeHex.replace('#',''); const r=parseInt(hex.substring(0,2),16)||128,g=parseInt(hex.substring(2,4),16)||128,b=parseInt(hex.substring(4,6),16)||128; const hsl=rgbToHsl(r,g,b), hue=hsl[0]*360, sat=hsl[1]*100, light=hsl[2]*100;
+                const isWarm = (hue>=0&&hue<=30)||(hue>=340); const isCool = hue>=270&&hue<=340; const isNeut = (!isWarm&&!isCool)||sat<20;
+                const isNude = lower.includes('nude')||lower.includes('beige')||(sat<25&&light>40&&light<75);
+                const isBerry = lower.includes('berry')||lower.includes('plum')||lower.includes('wine');
+                const isRed = lower.includes('red')||lower.includes('crimson'); const isPink = lower.includes('pink')||lower.includes('rose');
+                const combo = skinTone+'_'+undertone;
+                const scoring = {
+                    'Very Fair_Cool': ()=> { if(isBerry)score+=3; if(isPink&&!isWarm)score+=2; if(isNude&&light>55)score+=1; },
+                    'Very Fair_Warm': ()=> { if(isNude&&light>55)score+=3; if(isPink&&isWarm)score+=2; },
+                    'Fair_Cool': ()=> { if(isBerry)score+=3; if(isPink)score+=2; if(isRed&&!isWarm)score+=2; },
+                    'Fair_Warm': ()=> { if(isPink&&isWarm)score+=3; if(isNude&&light>40)score+=2; },
+                    'Light_Cool': ()=> { if(isBerry)score+=3; if(isPink)score+=2; },
+                    'Light_Warm': ()=> { if(isRed&&isWarm)score+=3; if(isNude)score+=2; },
+                    'Medium_Cool': ()=> { if(isBerry)score+=3; if(isRed&&sat>40)score+=2; },
+                    'Medium_Warm': ()=> { if(isRed&&isWarm)score+=3; if(isNude&&light<65)score+=2; },
+                    'Tan_Cool': ()=> { if(isBerry)score+=3; if(isRed&&sat>45)score+=2; },
+                    'Tan_Warm': ()=> { if(isRed&&isWarm)score+=3; },
+                    'Deep_Cool': ()=> { if(isBerry)score+=3; if(isRed&&sat>50)score+=3; },
+                    'Deep_Warm': ()=> { if(isRed&&isWarm)score+=3; },
+                    'Dark_Cool': ()=> { if(isBerry)score+=3; if(isRed&&sat>45)score+=3; },
+                    'Dark_Warm': ()=> { if(isRed&&isWarm)score+=3; },
+                };
+                if(scoring[combo]) scoring[combo]();
+                if(lower.includes('matte')) score+=1; if(lower.includes('cream')||lower.includes('satin')) score+=1;
+                return Math.max(1,Math.min(5,score));
+            }
+            function renderStep4() {
+                let html = '';
+                if(!recommendedProducts.length) html=`<div class="lsf-error"><i class="fas fa-search"></i><h3>No lipstick products found</h3><p>Add lipstick products in the admin panel first.</p><button class="lsf-btn lsf-btn-primary" onclick="document.getElementById('lsfClose').click()" style="max-width:200px;margin:16px auto;">Close</button></div>`;
+                else {
+                    html = `<div class="lsf-results-header"><h2>💄 Your Perfect Matches</h2><div style="margin-top:12px;"><span class="lsf-skin-badge"><span class="lsf-skin-dot" style="background:${getSkinHex(detectedSkinTone)};"></span>Skin: ${detectedSkinTone}</span><span class="lsf-skin-badge"><i class="fas fa-palette" style="color:#666;"></i> Undertone: ${detectedUndertone}</span></div></div><div class="lsf-results-grid">${recommendedProducts.map((p,i)=>renderCard(p,i)).join('')}</div><div style="text-align:center;margin-top:16px;"><button class="lsf-btn lsf-btn-secondary" id="lsfRestartBtn" style="max-width:200px;"><i class="fas fa-redo"></i> Try Again</button></div>`;
+                }
+                stepContent.innerHTML = `<div class="lsf-step-body">${html}</div>`;
+                document.querySelectorAll('.lsf-add-cart-btn').forEach(btn=>btn.addEventListener('click', e=>{ e.stopPropagation(); const pid=btn.dataset.productId, sn=btn.dataset.shadeName, sh=btn.dataset.shadeHex; addToCartFromFinder(pid,{name:sn,hex:sh}); }));
+                document.querySelectorAll('.lsf-view-btn').forEach(btn=>btn.addEventListener('click', e=>{ e.stopPropagation(); viewProduct(btn.dataset.productId); }));
+                document.querySelectorAll('.lsf-result-card').forEach(c=>c.addEventListener('click',()=>viewProduct(c.dataset.productId)));
+                const restart = document.getElementById('lsfRestartBtn'); if(restart) restart.addEventListener('click', ()=>{ resetState(); renderStep(1); });
+            }
+            function renderCard(p,i) { const score=p.matchScore||3; const stars='★'.repeat(score)+'☆'.repeat(5-score); const label=score>=5?'Perfect Match':score>=4?'Great Match':score>=3?'Good Match':'Fair Match'; const sname=p.bestShade?.name||'Universal', shex=p.bestShade?.hex||'#cc8899'; return `<div class="lsf-result-card" data-product-id="${escapeAttr(p.id)}" data-shade-name="${escapeAttr(sname)}" data-shade-hex="${escapeAttr(shex)}"><img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name)}" onerror="this.src='https://placehold.co/400x300/f8f8f8/ccc?text=No+Image'"><div class="lsf-result-info"><h4>${escapeHtml(p.name)}</h4><span class="lsf-shade-name"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${shex};vertical-align:middle;margin-right:6px;border:1px solid #ccc;"></span>${escapeHtml(sname)}</span><div class="lsf-stars">${stars}</div><span class="lsf-score-badge">${label}</span><div class="lsf-price">Rs. ${(p.price||0).toLocaleString()}</div></div><div class="lsf-result-actions"><button class="lsf-btn lsf-btn-primary lsf-add-cart-btn" data-product-id="${escapeAttr(p.id)}" data-shade-name="${escapeAttr(sname)}" data-shade-hex="${escapeAttr(shex)}"><i class="fas fa-cart-plus"></i> Add</button><button class="lsf-btn-outline lsf-view-btn" data-product-id="${escapeAttr(p.id)}"><i class="fas fa-eye"></i> View</button></div></div>`; }
+            function addToCartFromFinder(productId, colour) { if(typeof addToCart==='function') { addToCart(productId, colour); showToastMsg('✅ Added to cart!'); } else if(typeof window.addToCart==='function') { window.addToCart(productId, colour); showToastMsg('✅ Added to cart!'); } else { if(typeof cart!=='undefined'&&Array.isArray(cart)){ const idx=cart.findIndex(i=>i.productId===productId&&JSON.stringify(i.colour)===JSON.stringify(colour)); if(idx>-1) cart[idx].quantity+=1; else cart.push({productId,colour,quantity:1}); if(typeof saveCartAndUpdate==='function') saveCartAndUpdate(); if(typeof updateCartCount==='function') updateCartCount(); showToastMsg('✅ Added to cart!'); } } }
+            function viewProduct(productId) { if(typeof openProductModal==='function') openProductModal(productId); else if(typeof window.openProductModal==='function') window.openProductModal(productId); closeFinder(); }
+            function showToastMsg(msg) { if(typeof showToast==='function') showToast(msg); else { const t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),3000); } } }
+            async function saveRecommendation() { try { let imgURL=capturedImageData; if(LARA_STORAGE?.isAvailable()&&capturedImageData) imgURL=await LARA_STORAGE.uploadImage(capturedImageData); if(typeof db!=='undefined') await db.collection('lipstickRecommendations').add({customerName,phone:customerPhone,imageURL:imgURL?.substring(0,1000)||'',skinTone:detectedSkinTone,undertone:detectedUndertone,recommendedProducts:recommendedProducts.slice(0,6).map(p=>({productId:p.id,productName:p.name,shadeName:p.bestShade?.name||'',shadeHex:p.bestShade?.hex||'',score:p.matchScore||3,price:p.price||0})),createdAt:firebase.firestore.FieldValue.serverTimestamp()}); } catch(e) {} }
+            function getSkinHex(t) { const found=SKIN_TONES.find(x=>x.name===t); return found?found.hex:'#c89460'; }
+            function escapeHtml(s){ if(typeof s!=='string') return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+            function escapeAttr(s){ if(typeof s!=='string') return ''; return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+            function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+            if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+            window.LARAShadeFinder = { open: openFinder, close: closeFinder, init };
+        })();
+    </script>
 
-    // Auth
-    window.login=async()=>{const email=document.getElementById('loginEmail').value.trim(),password=document.getElementById('loginPassword').value;if(!email||!password)return alert('Enter credentials');try{await auth.signInWithEmailAndPassword(email,password)}catch(e){alert('Login failed: '+e.message)}};
-    window.logout=()=>auth.signOut();
-    auth.onAuthStateChanged(user=>{if(user){document.getElementById('loginBox').classList.add('hidden');document.getElementById('adminPanel').classList.add('active');document.getElementById('adminEmail').textContent=user.email;loadProducts();}else{document.getElementById('loginBox').classList.remove('hidden');document.getElementById('adminPanel').classList.remove('active');}});
+    <!-- ========== MAIN LARA SCRIPTS (with App Check) ========== -->
+    <script>
+        // ==================== SECURITY UTILITIES ====================
+        function escapeHtml(unsafe) {
+            if (typeof unsafe !== 'string') return '';
+            return unsafe.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+        }
+        function formatBotReply(text) {
+            if (typeof text !== 'string') return '';
+            let safe = escapeHtml(text);
+            safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            safe = safe.replace(/\n/g, '<br>');
+            return safe;
+        }
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        function isNotBlank(str) {
+            return typeof str === 'string' && str.trim().length > 0;
+        }
+        function sanitizeText(str) {
+            if (typeof str !== 'string') return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.textContent.trim();
+        }
 
-    // Products CRUD (unchanged)
-    async function loadProducts(){
-        const list=document.getElementById('productList');list.innerHTML='<p style="color:#888;">Loading...</p>';
-        const snap=await db.collection('products').orderBy('createdAt','desc').get();const prods=[];snap.forEach(d=>prods.push({id:d.id,...d.data()}));
-        document.getElementById('productCount').textContent=prods.length;
-        list.innerHTML=prods.map(p=>`<div class="product-item"><img src="${p.image||'https://via.placeholder.com/70'}" onerror="this.src='https://via.placeholder.com/70'" /><div style="flex:1;"><strong>${p.name}</strong><small style="display:block;">${p.category||'N/A'} | Rs. ${(p.price||0).toLocaleString()}</small><div>${(p.colours||[]).map(c=>`<span class="mini-colour-tag"><span class="mini-dot" style="background:${typeof c==='object'?c.hex:'#ccc'};"></span>${typeof c==='object'?c.name:c}</span>`).join('')}</div></div><div style="display:flex;gap:8px;"><button class="btn-secondary btn-small" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button><button class="btn-danger btn-small" onclick="deleteProduct('${p.id}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
-    }
+        // ==================== FIREBASE CONFIG ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOqKpGbesbgeAfA2J_QGfomjTiY_FIfnA",
+            authDomain: "lara-f5aed.firebaseapp.com",
+            projectId: "lara-f5aed",
+            storageBucket: "lara-f5aed.firebasestorage.app",
+            messagingSenderId: "942336215471",
+            appId: "1:942336215471:web:7971423ac9d4cff776075a"
+        };
+        firebase.initializeApp(firebaseConfig);
 
-    async function loadProductsForSelect(){
-        const snap=await db.collection('products').orderBy('name').get();
-        const select=document.getElementById('trainingProduct');
-        select.innerHTML='<option value="">None</option>';
-        snap.forEach(d=>{const p=d.data();select.innerHTML+=`<option value="${d.id}">${p.name}</option>`;});
-    }
+        // ==================== APP CHECK (NEW) ====================
+        const appCheck = firebase.appCheck();
+        // ⚠️ පහත site key එක ඔබේ reCAPTCHA v3 public key එකට මාරු කරන්න
+        appCheck.activate('6LcnnkUtAAAAACck-P6JXE9mITueAmhYUWCxYYkm', true);
 
-    window.saveProduct=async()=>{
-        const name=document.getElementById('productName').value.trim(),cat=document.getElementById('productCategory').value,price=parseFloat(document.getElementById('productPrice').value),img=document.getElementById('productImage').value.trim(),desc=document.getElementById('productDescription').value.trim();
-        if(!name||!cat||!price)return alert('Fill required fields');
-        const data={name,category:cat,price,image:img||'https://via.placeholder.com/300x220/1a1a1a/fff?text=No+Image',colours:[...currentColours],description:desc,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-        if(editingProductId){await db.collection('products').doc(editingProductId).update(data);alert('Updated!');}else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('products').add(data);alert('Added!');}
-        resetForm();loadProducts();
-    };
-    window.editProduct=async(id)=>{const doc=await db.collection('products').doc(id).get();const p=doc.data();editingProductId=id;document.getElementById('editProductId').value=id;document.getElementById('productName').value=p.name;document.getElementById('productCategory').value=p.category;document.getElementById('productPrice').value=p.price;document.getElementById('productImage').value=p.image||'';document.getElementById('productDescription').value=p.description||'';currentColours=(p.colours||[]).map(c=>typeof c==='object'?{name:c.name,hex:c.hex}:{name:String(c),hex:'#000000'});renderColourTags();document.getElementById('formTitle').innerHTML='<i class="fas fa-edit"></i> Edit Product';document.getElementById('saveBtnText').textContent='Update Product';document.getElementById('cancelEditBtn').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});};
-    window.deleteProduct=async(id)=>{if(confirm('Delete?')){await db.collection('products').doc(id).delete();if(editingProductId===id)resetForm();loadProducts();}};
-    window.cancelEdit=()=>resetForm();
-    function resetForm(){editingProductId=null;document.getElementById('editProductId').value='';document.getElementById('productName').value='';document.getElementById('productCategory').value='';document.getElementById('productPrice').value='';document.getElementById('productImage').value='';document.getElementById('productDescription').value='';currentColours=[];renderColourTags();document.getElementById('formTitle').innerHTML='<i class="fas fa-plus-circle"></i> Add New Product';document.getElementById('saveBtnText').textContent='Save Product';document.getElementById('cancelEditBtn').classList.add('hidden');}
+        // localhost සඳහා debug token (production වලදී මෙම block එක ඉවත් කරන්න)
+        if (window.location.hostname === 'localhost') {
+            self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        }
 
-    // AI Training Functions (unchanged)
-    window.saveTraining=async()=>{
-        const question=document.getElementById('trainingQuestion').value.trim();
-        const keywords=document.getElementById('trainingKeywords').value.trim();
-        const answer=document.getElementById('trainingAnswer').value.trim();
-        const productId=document.getElementById('trainingProduct').value;
-        const priority=document.getElementById('trainingPriority').value;
-        if(!question||!keywords||!answer)return alert('Fill required fields');
-        const keywordArray=keywords.split(',').map(k=>k.trim().toLowerCase()).filter(k=>k);
-        await db.collection('chatbotTraining').add({
-            question,keywords:keywordArray,answer,productId:productId||null,priority,
-            createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-            usageCount:0
-        });
-        alert('Training saved! ✅');
-        document.getElementById('trainingQuestion').value='';
-        document.getElementById('trainingKeywords').value='';
-        document.getElementById('trainingAnswer').value='';
-        document.getElementById('trainingProduct').value='';
-        loadTraining();
-    };
+        const db = firebase.firestore();
+        // ==================== EMAILJS CONFIG ====================
+        const EMAILJS_PUBLIC_KEY = 'W_o_RiuSlVn_zCxlp';
+        const EMAILJS_SERVICE_ID = 'service_jole3ot';
+        const EMAILJS_TEMPLATE_ID = 'template_n8pbmd8';
+        let emailJsReady = false;
+        if (EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+            emailJsReady = true;
+        }
 
-    async function loadTraining(){
-        const snap=await db.collection('chatbotTraining').orderBy('createdAt','desc').get();
-        const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));
-        document.getElementById('trainedCount').textContent=items.length;
-        const list=document.getElementById('trainingList');
-        list.innerHTML=items.map(item=>`
-            <div class="qa-item">
-                <div style="flex:1;">
-                    <strong style="color:#fff;">Q: ${item.question}</strong>
-                    <p style="color:#aaa;margin-top:5px;">A: ${item.answer.substring(0,100)}...</p>
-                    <small style="color:#666;">Keywords: ${(item.keywords||[]).join(', ')} | Priority: ${item.priority||'normal'} | Used: ${item.usageCount||0} times</small>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn-danger btn-small" onclick="deleteTraining('${item.id}')"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    window.deleteTraining=async(id)=>{if(confirm('Delete this training?')){await db.collection('chatbotTraining').doc(id).delete();loadTraining();}};
-
-    // Unanswered Questions (unchanged)
-    async function loadUnanswered(){
-        const snap=await db.collection('unansweredQuestions').orderBy('timestamp','desc').limit(50).get();
-        const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));
-        document.getElementById('unansweredCount').textContent=items.length;
-        const list=document.getElementById('unansweredList');
-        if(!items.length){list.innerHTML='<p style="color:#888;">No unanswered questions! 🎉</p>';return;}
-        list.innerHTML=items.map(item=>`
-            <div class="qa-item">
-                <div style="flex:1;">
-                    <strong style="color:#fff;">❓ ${item.question}</strong>
-                    <small style="display:block;color:#666;">Asked: ${item.timestamp?new Date(item.timestamp.toDate()).toLocaleString():'Unknown'}</small>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn-success btn-small" onclick="trainFromUnanswered('${item.id}')"><i class="fas fa-brain"></i> Train</button>
-                    <button class="btn-danger btn-small" onclick="deleteUnanswered('${item.id}')"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    window.trainFromUnanswered=async(id)=>{
-        const doc=await db.collection('unansweredQuestions').doc(id).get();
-        const question=doc.data().question;
-        document.getElementById('trainingQuestion').value=question;
-        document.getElementById('trainingKeywords').value=question.toLowerCase().replace(/[?.,]/g,'').split(' ').filter(w=>w.length>2).join(', ');
-        document.getElementById('trainingAnswer').value='';
-        document.getElementById('trainingAnswer').focus();
-        switchTab('training');
-        await db.collection('unansweredQuestions').doc(id).delete();
-        loadUnanswered();
-    };
-
-    window.deleteUnanswered=async(id)=>{if(confirm('Delete?')){await db.collection('unansweredQuestions').doc(id).delete();loadUnanswered();}};
-
-    // ==================== 🔥 AI SHADE FINDER ADMIN FUNCTIONS ====================
-    async function loadShadeFinderData(searchName, searchPhone) {
-        const listEl = document.getElementById('sfRecommendationsList');
-        if (!listEl) return;
-        listEl.innerHTML = '<p style="color:#888;">Loading...</p>';
-
+        // ==================== GLOBAL STATE ====================
+        let products = [];
+        let currentProduct = null;
+        let selectedColour = null;
+        let cart = [];
+        let categoriesSet = new Set();
+        let trainingData = [];
         try {
-            let query = db.collection('lipstickRecommendations').orderBy('createdAt', 'desc');
-            if (searchName && searchName.trim()) {
-                query = query.where('customerName', '>=', searchName.trim())
-                             .where('customerName', '<=', searchName.trim() + '\uf8ff');
+            const rawCart = localStorage.getItem('lara_cart_v5');
+            if (rawCart) {
+                const parsed = JSON.parse(rawCart);
+                if (Array.isArray(parsed)) {
+                    cart = parsed.filter(item => item && typeof item.productId === 'string' && typeof item.quantity === 'number' && item.quantity > 0);
+                }
             }
-            const snap = await query.limit(50).get();
-            const items = [];
-            snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+        } catch(e) {
+            cart = [];
+            localStorage.removeItem('lara_cart_v5');
+        }
 
-            // Client-side phone filter
-            let filtered = items;
-            if (searchPhone && searchPhone.trim()) {
-                const phoneFilter = searchPhone.trim().toLowerCase();
-                filtered = items.filter(item => (item.phone || '').toLowerCase().includes(phoneFilter));
-            }
+        const productGrid = document.getElementById('productGrid');
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const cartSidebar = document.getElementById('cartSidebar');
+        const cartCountEl = document.getElementById('cartCount');
+        const cartItemsEl = document.getElementById('cartItems');
+        const cartTotalEl = document.getElementById('cartTotal');
+        const toastEl = document.getElementById('toast');
+        const modal = document.getElementById('productModal');
 
-            document.getElementById('sfTotalRecommendations').textContent = filtered.length;
-            const customers = new Set(filtered.map(i => i.customerName).filter(Boolean));
-            document.getElementById('sfTotalCustomers').textContent = customers.size;
+        function showToast(msg) {
+            toastEl.textContent = sanitizeText(msg);
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._timer);
+            toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+        }
 
+        async function loadTrainingData() {
+            try {
+                const snap = await db.collection('chatbotTraining').get();
+                trainingData = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    trainingData.push({ id: doc.id, question: sanitizeText(data.question || ''), answer: sanitizeText(data.answer || ''), keywords: Array.isArray(data.keywords) ? data.keywords.map(k => sanitizeText(k)).filter(k => k.length > 0) : [], priority: sanitizeText(data.priority || 'normal') });
+                });
+            } catch(e) {}
+        }
+
+        function setupRealtimeProducts() {
+            db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                products = [];
+                categoriesSet.clear();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const sanitized = {
+                        id: doc.id,
+                        name: sanitizeText(data.name || 'Product'),
+                        category: sanitizeText(data.category || 'Beauty'),
+                        description: sanitizeText(data.description || 'Premium quality product.'),
+                        price: typeof data.price === 'number' && data.price >= 0 ? data.price : 0,
+                        image: typeof data.image === 'string' && data.image.length > 0 ? data.image : 'https://placehold.co/400x300/f8f8f8/ccc?text=No+Image',
+                        colours: Array.isArray(data.colours) ? data.colours.map(c => {
+                            if (typeof c === 'object' && c !== null) return { name: sanitizeText(c.name || ''), hex: /^#[0-9a-fA-F]{3,6}$/.test(c.hex || '') ? c.hex : '#bcbcbc' };
+                            return { name: sanitizeText(String(c)), hex: '#bcbcbc' };
+                        }) : [],
+                        createdAt: data.createdAt || null
+                    };
+                    products.push(sanitized);
+                    if (sanitized.category) categoriesSet.add(sanitized.category);
+                });
+                const currentCat = categoryFilter.value;
+                categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+                [...categoriesSet].sort().forEach(cat => { categoryFilter.innerHTML += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`; });
+                if (currentCat && [...categoriesSet].includes(currentCat)) categoryFilter.value = currentCat;
+                renderProducts();
+                updateCartCount();
+                renderCartItems();
+            }, error => {
+                productGrid.innerHTML = '<p style="text-align:center;">⚠️ Error loading products. Please refresh.</p>';
+            });
+        }
+
+        function renderProducts() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const selectedCat = categoryFilter.value;
+            let filtered = products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(searchTerm) || p.category.toLowerCase().includes(searchTerm) || p.description.toLowerCase().includes(searchTerm);
+                const matchCat = selectedCat === 'all' || p.category === selectedCat;
+                return matchSearch && matchCat;
+            });
             if (filtered.length === 0) {
-                listEl.innerHTML = '<p style="color:#888;">No recommendations found.</p>';
+                productGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:50px;">😊 No products found.</div>';
                 return;
             }
-
-            listEl.innerHTML = filtered.map(item => `
-            <div class="qa-item" style="flex-direction:column;align-items:flex-start;">
-                <div style="display:flex;align-items:center;gap:14px;width:100%;flex-wrap:wrap;">
-                    ${item.imageURL && !item.imageURL.startsWith('data:') ? 
-                        `<img src="${escapeHtmlAttr(item.imageURL)}" style="width:60px;height:60px;object-fit:cover;border-radius:12px;" onerror="this.style.display='none'" />` : 
-                        `<div style="width:60px;height:60px;border-radius:12px;background:#333;display:flex;align-items:center;justify-content:center;color:#888;"><i class="fas fa-camera"></i></div>`}
-                    <div style="flex:1;">
-                        <strong style="color:#fff;">${escapeHtml(item.customerName || 'Unknown')}</strong>
-                        <small style="display:block;color:#aaa;">📱 ${escapeHtml(item.phone || 'N/A')}</small>
-                        <small style="color:#888;">🎨 Skin: ${escapeHtml(item.skinTone || 'N/A')} | Undertone: ${escapeHtml(item.undertone || 'N/A')}</small>
-                    </div>
-                    <small style="color:#666;">📅 ${item.createdAt ? new Date(item.createdAt.toDate()).toLocaleDateString('en-LK') : 'N/A'}</small>
-                </div>
-                ${item.recommendedProducts && item.recommendedProducts.length > 0 ? `
-                <div style="margin-top:10px;width:100%;">
-                    <small style="color:#aaa;">💄 Recommended:</small>
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
-                        ${item.recommendedProducts.map(rp => `
-                            <span class="mini-colour-tag">
-                                <span class="mini-dot" style="background:${escapeHtmlAttr(rp.shadeHex || '#ccc')};"></span>
-                                ${escapeHtml(rp.productName || 'Product')} - ${escapeHtml(rp.shadeName || 'N/A')} 
-                                <small style="color:#888;">(${rp.score || '?'}/5)</small>
-                            </span>
-                        `).join('')}
-                    </div>
-                </div>` : '<small style="color:#888;">No product recommendations</small>'}
-                <div style="margin-top:8px;display:flex;gap:8px;">
-                    <button class="btn-danger btn-small" onclick="window.LARAShadeFinderAdmin.deleteRecommendation('${escapeHtmlAttr(item.id)}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-            </div>`).join('');
-
-        } catch (e) {
-            console.error('❌ Load recommendations error:', e);
-            listEl.innerHTML = '<p style="color:#c0392b;">Error loading data: ' + escapeHtml(e.message) + '</p>';
+            let html = '';
+            filtered.forEach(p => {
+                const colours = p.colours || [];
+                let previewHtml = '';
+                if (colours.length) {
+                    previewHtml = '<div class="colours-preview">' + colours.slice(0,3).map(c => '<span class="mini-colour"><span class="mini-dot" style="background:'+escapeHtml(c.hex)+';"></span>'+escapeHtml(c.name)+'</span>').join('') + (colours.length>3 ? '<span class="mini-colour">+'+(colours.length-3)+'</span>':'') + '</div>';
+                }
+                html += '<div class="card" onclick="openProductModal(\''+escapeHtml(p.id)+'\')"><img src="'+escapeHtml(p.image)+'" alt="'+escapeHtml(p.name)+'" loading="lazy" onerror="this.src=\'https://placehold.co/400x300/f8f8f8/ccc?text=No+Image\'"><h3>'+escapeHtml(p.name)+'</h3><p><i class="fas fa-tag"></i> '+escapeHtml(p.category)+'</p><div class="price">Rs. '+p.price.toLocaleString()+'</div>'+previewHtml+'<button class="btn" onclick="event.stopPropagation();quickAddToCart(\''+escapeHtml(p.id)+'\')"><i class="fas fa-cart-plus"></i> Add to Cart</button></div>';
+            });
+            productGrid.innerHTML = html;
         }
-    }
 
-    async function deleteRecommendation(id) {
-        if (!confirm('Delete this recommendation permanently?')) return;
-        try {
-            const doc = await db.collection('lipstickRecommendations').doc(id).get();
-            const data = doc.data();
-            if (data && data.imageURL) {
-                // Try to delete from storage
-                try {
-                    if (data.imageURL.includes('firebasestorage.googleapis.com')) {
-                        const pathMatch = data.imageURL.match(/\/o\/(.+?)\?/);
-                        if (pathMatch) await storage.ref(decodeURIComponent(pathMatch[1])).delete();
-                    }
-                } catch (storageErr) { console.warn('Storage delete failed:', storageErr); }
+        let searchDebounce;
+        searchInput.addEventListener('input', () => { searchInput.value = searchInput.value.replace(/<[^>]*>/g, ''); clearTimeout(searchDebounce); searchDebounce = setTimeout(renderProducts, 300); });
+        categoryFilter.addEventListener('change', renderProducts);
+
+        window.openProductModal = (productId) => {
+            currentProduct = products.find(p => p.id === productId);
+            if (!currentProduct) return;
+            selectedColour = null;
+            document.getElementById('modalImage').src = currentProduct.image || 'https://placehold.co/500x400/f8f8f8/ddd?text=No+Preview';
+            document.getElementById('modalName').textContent = currentProduct.name;
+            document.getElementById('modalPrice').textContent = currentProduct.price.toLocaleString();
+            document.getElementById('modalCategory').textContent = '📂 ' + currentProduct.category;
+            document.getElementById('modalDetails').textContent = currentProduct.description;
+            const coloursDiv = document.getElementById('modalColours');
+            coloursDiv.innerHTML = '';
+            const colours = currentProduct.colours || [];
+            if (colours.length === 0) {
+                coloursDiv.innerHTML = '<span style="color:#6c6c6c;">No shade selection needed</span>';
+            } else {
+                colours.forEach(colour => {
+                    const chip = document.createElement('span');
+                    chip.className = 'colour-chip';
+                    chip.innerHTML = '<span class="dot" style="background:' + escapeHtml(colour.hex) + ';"></span>' + escapeHtml(colour.name);
+                    chip.onclick = () => {
+                        document.querySelectorAll('.colour-chip').forEach(c => c.classList.remove('selected'));
+                        chip.classList.add('selected');
+                        selectedColour = { name: colour.name, hex: colour.hex };
+                    };
+                    coloursDiv.appendChild(chip);
+                });
             }
-            await db.collection('lipstickRecommendations').doc(id).delete();
-            alert('Deleted! ✅');
-            loadShadeFinderData();
-        } catch (e) {
-            alert('Delete failed: ' + e.message);
-        }
-    }
-
-    function clearSearch() {
-        document.getElementById('sfSearchName').value = '';
-        document.getElementById('sfSearchPhone').value = '';
-        loadShadeFinderData();
-    }
-
-    // Helper escape functions for admin
-    function escapeHtml(str) {
-        if (typeof str !== 'string') return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-    function escapeHtmlAttr(str) {
-        if (typeof str !== 'string') return '';
-        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#039;');
-    }
-
-    // Expose globally for the onclick handlers
-    window.LARAShadeFinderAdmin = {
-        loadData: () => {
-            const name = document.getElementById('sfSearchName')?.value || '';
-            const phone = document.getElementById('sfSearchPhone')?.value || '';
-            loadShadeFinderData(name, phone);
-        },
-        clearSearch,
-        deleteRecommendation
-    };
-
-    // Search event listeners
-    document.getElementById('sfSearchName')?.addEventListener('input', debounce(function() {
-        loadShadeFinderData(this.value, document.getElementById('sfSearchPhone')?.value || '');
-    }, 400));
-    document.getElementById('sfSearchPhone')?.addEventListener('input', debounce(function() {
-        loadShadeFinderData(document.getElementById('sfSearchName')?.value || '', this.value);
-    }, 400));
-
-    function debounce(fn, delay) {
-        let timer;
-        return function(...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => fn.apply(this, args), delay);
+            modal.classList.add('show');
         };
-    }
+        window.closeModal = () => { modal.classList.remove('show'); currentProduct = null; selectedColour = null; };
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('show')) closeModal(); });
 
-    // Initial load when admin panel becomes visible
-    const observer = new MutationObserver(() => {
-        if (document.getElementById('adminPanel')?.classList.contains('active')) {
-            // Preload shade finder data when panel activates (optional)
-            observer.disconnect();
+        window.quickAddToCart = (productId) => {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            if ((product.colours || []).length > 0) { openProductModal(productId); showToast('✨ Please select a shade first'); return; }
+            addToCart(productId, null);
+        };
+        window.addToCartFromModal = () => {
+            if (!currentProduct) return;
+            if ((currentProduct.colours || []).length > 0 && !selectedColour) { showToast('💄 Choose a colour before adding'); return; }
+            addToCart(currentProduct.id, selectedColour);
+            closeModal();
+        };
+        function addToCart(productId, colour) {
+            const idx = cart.findIndex(item => item.productId === productId && JSON.stringify(item.colour) === JSON.stringify(colour));
+            if (idx > -1) {
+                if (cart[idx].quantity < 99) cart[idx].quantity += 1;
+                else { showToast('⚠️ Maximum quantity reached (99)'); return; }
+            } else {
+                cart.push({ productId, colour, quantity: 1 });
+            }
+            saveCartAndUpdate();
+            showToast('✓ Added to cart');
         }
-    });
-    const adminPanelEl = document.getElementById('adminPanel');
-    if (adminPanelEl) observer.observe(adminPanelEl, { attributes: true, attributeFilter: ['class'] });
-</script>
+        window.removeFromCart = (idx) => { if (idx >= 0 && idx < cart.length) { cart.splice(idx, 1); saveCartAndUpdate(); } };
+        window.changeQuantity = (idx, delta) => {
+            if (idx >= 0 && idx < cart.length) {
+                cart[idx].quantity += delta;
+                if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+                else if (cart[idx].quantity > 99) { cart[idx].quantity = 99; showToast('⚠️ Maximum quantity is 99'); }
+                saveCartAndUpdate();
+            }
+        };
+        function saveCartAndUpdate() { try { localStorage.setItem('lara_cart_v5', JSON.stringify(cart)); } catch(e) {} updateCartCount(); renderCartItems(); }
+        function updateCartCount() { const count = cart.reduce((sum, item) => sum + item.quantity, 0); cartCountEl.textContent = count; }
+        function renderCartItems() {
+            if (!cart.length) { cartItemsEl.innerHTML = '<p style="opacity:0.7;text-align:center;margin-top:20px;">🛒 Your cart is empty</p>'; cartTotalEl.textContent = '0.00'; return; }
+            let html = '', totalCart = 0;
+            cart.forEach((item, idx) => {
+                const product = products.find(p => p.id === item.productId);
+                if (!product) return;
+                const price = product.price || 0;
+                const subtotal = price * item.quantity;
+                totalCart += subtotal;
+                html += '<div class="cart-item"><h4 style="font-weight:600;">'+escapeHtml(product.name)+'</h4>'+(item.colour?'<p style="font-size:0.8rem;margin-top:4px;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+escapeHtml(item.colour.hex)+';margin-right:6px;"></span>'+escapeHtml(item.colour.name)+'</p>':'')+'<p>Rs. '+price.toLocaleString()+' × '+item.quantity+' = <strong>Rs. '+subtotal.toLocaleString()+'</strong></p><div style="display:flex;gap:8px;margin-top:10px;"><button class="qty-btn" onclick="changeQuantity('+idx+',-1)">−</button><span style="padding:0 6px;">'+item.quantity+'</span><button class="qty-btn" onclick="changeQuantity('+idx+',1)">+</button><button class="remove-btn" onclick="removeFromCart('+idx+')"><i class="fas fa-trash-alt"></i> Remove</button></div></div>';
+            });
+            cartItemsEl.innerHTML = html;
+            cartTotalEl.textContent = totalCart.toLocaleString();
+        }
+        window.toggleCart = () => { cartSidebar.classList.toggle('active'); if (cartSidebar.classList.contains('active')) renderCartItems(); };
+
+        async function sendOrderEmail(orderData) {
+            if (!emailJsReady) return false;
+            try {
+                const sanitizedData = {
+                    customer_name: sanitizeText(orderData.name).substring(0,100),
+                    customer_phone: sanitizeText(orderData.phone).substring(0,20),
+                    customer_email: sanitizeText(orderData.email).substring(0,150),
+                    customer_address: sanitizeText(orderData.address).substring(0,300),
+                    order_items: sanitizeText(orderData.details).substring(0,2000),
+                    total_price: 'Rs. ' + orderData.total.toLocaleString(),
+                    order_date: new Date().toLocaleString('en-LK')
+                };
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, sanitizedData);
+                return true;
+            } catch(e) { return false; }
+        }
+
+        let lastOrderTime = 0;
+        const ORDER_COOLDOWN_MS = 10000;
+        window.placeOrder = async () => {
+            const now = Date.now();
+            if (now - lastOrderTime < ORDER_COOLDOWN_MS) {
+                const remaining = Math.ceil((ORDER_COOLDOWN_MS - (now - lastOrderTime)) / 1000);
+                showToast('⏳ Please wait ' + remaining + ' seconds before placing another order.');
+                return;
+            }
+            if (cart.length === 0) { showToast('Cart is empty'); return; }
+            const name = document.getElementById('customerName').value.trim();
+            const email = document.getElementById('customerEmail').value.trim();
+            const address = document.getElementById('customerAddress').value.trim();
+            const phone = document.getElementById('customerPhone').value.trim();
+            if (!isNotBlank(name)) { showToast('❌ Please enter your full name.'); return; }
+            if (!isNotBlank(email) || !isValidEmail(email)) { showToast('❌ Please enter a valid email address.'); return; }
+            if (!isNotBlank(address)) { showToast('❌ Please enter your delivery address.'); return; }
+            if (name.length > 100) { showToast('❌ Name is too long (max 100 characters).'); return; }
+            if (address.length > 300) { showToast('❌ Address is too long (max 300 characters).'); return; }
+            let orderTotal = 0, orderDetails = '';
+            for (const item of cart) {
+                const prod = products.find(p => p.id === item.productId);
+                if (prod) {
+                    let subtotal = (prod.price || 0) * item.quantity;
+                    orderTotal += subtotal;
+                    orderDetails += '• ' + prod.name + (item.colour ? ' (' + item.colour.name + ')' : '') + ' × ' + item.quantity + ' = Rs. ' + subtotal.toLocaleString() + '\n';
+                }
+            }
+            lastOrderTime = now;
+            const success = await sendOrderEmail({ name, phone, email, address, details: orderDetails, total: orderTotal });
+            if (success) {
+                cart = []; saveCartAndUpdate();
+                ['customerName','customerPhone','customerEmail','customerAddress'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                toggleCart();
+                showToast('✅ Order sent! Check your email.');
+            } else { showToast('❌ Email failed. Please try again or contact support.'); lastOrderTime = 0; }
+        };
+
+        let lastChatTime = 0;
+        const CHAT_COOLDOWN_MS = 800;
+        async function getBotReply(userMessage) {
+            const lowerMsg = userMessage.toLowerCase();
+            const greetings = ['hi','hello','hey','greetings','good morning','good afternoon','good evening'];
+            if (greetings.some(g => lowerMsg.startsWith(g))) return "Hello beauty! 👋 I'm LARA's AI assistant. Ask me about products, prices, shades, new arrivals, or anything beauty! 💄";
+            if (lowerMsg.includes('help') || lowerMsg.includes('what can you do')) return "You can ask me:\n• 'Show lipsticks'\n• 'Products under Rs.3000'\n• 'Price of [product]'\n• 'Shades of [product]'\n• 'New arrivals'\n• Or anything about beauty products! ✨";
+            try {
+                const trainingSnap = await db.collection('chatbotTraining').get();
+                let bestMatch = null, highestScore = 0;
+                trainingSnap.forEach(doc => {
+                    const data = doc.data();
+                    let score = 0;
+                    const keywords = Array.isArray(data.keywords) ? data.keywords : [];
+                    keywords.forEach(keyword => { if (lowerMsg.includes(sanitizeText(keyword).toLowerCase())) score += 3; });
+                    const questionWords = sanitizeText(data.question || '').toLowerCase().replace(/[?.,!]/g,'').split(' ').filter(w => w.length > 2);
+                    questionWords.forEach(word => { if (lowerMsg.includes(word)) score += 1; });
+                    if (lowerMsg.includes(sanitizeText(data.question || '').toLowerCase())) score += 5;
+                    if (sanitizeText(data.priority || '') === 'high') score += 2;
+                    if (score > highestScore && score >= 3) { highestScore = score; bestMatch = { ...data, id: doc.id }; }
+                });
+                if (bestMatch && highestScore >= 3) {
+                    try { db.collection('chatbotTraining').doc(bestMatch.id).update({ usageCount: firebase.firestore.FieldValue.increment(1) }).catch(()=>{}); } catch(e) {}
+                    return sanitizeText(bestMatch.answer || '');
+                }
+            } catch(e) {}
+            let filtered = [...products];
+            if (lowerMsg.includes('lipstick')||lowerMsg.includes('lip')) filtered = filtered.filter(p => p.category && p.category.toLowerCase().includes('lipstick'));
+            else if (lowerMsg.includes('skincare')||lowerMsg.includes('skin')||lowerMsg.includes('cream')) filtered = filtered.filter(p => p.category && p.category.toLowerCase().includes('skincare'));
+            else if (lowerMsg.includes('perfume')||lowerMsg.includes('fragrance')) filtered = filtered.filter(p => p.category && p.category.toLowerCase().includes('perfume'));
+            else if (lowerMsg.includes('makeup')||lowerMsg.includes('make up')) filtered = filtered.filter(p => p.category && p.category.toLowerCase().includes('makeup'));
+            const underMatch = lowerMsg.match(/(?:under|below|less than|cheaper than)\s*rs\.?\s*(\d+)/i);
+            if (underMatch) { const max = parseInt(underMatch[1]); if (!isNaN(max) && max >= 0) filtered = filtered.filter(p => (p.price || 0) <= max); }
+            const overMatch = lowerMsg.match(/(?:over|above|more than)\s*rs\.?\s*(\d+)/i);
+            if (overMatch) { const min = parseInt(overMatch[1]); if (!isNaN(min) && min >= 0) filtered = filtered.filter(p => (p.price || 0) >= min); }
+            let exactProduct = null;
+            for (const p of products) { if (lowerMsg.includes(p.name.toLowerCase())) { exactProduct = p; break; } }
+            if (exactProduct && (lowerMsg.includes('price')||lowerMsg.includes('cost')||lowerMsg.includes('how much'))) return '💰 **' + exactProduct.name + '** costs Rs. ' + (exactProduct.price || 0).toLocaleString() + '. ' + (exactProduct.description || 'Premium quality product.');
+            if (exactProduct && (lowerMsg.includes('shade')||lowerMsg.includes('colour')||lowerMsg.includes('color'))) { const shades = (exactProduct.colours || []).map(c => c.name).join(', '); return shades ? '🎨 **' + exactProduct.name + '** available shades: ' + shades + '.' : '**' + exactProduct.name + '** has no shade options.'; }
+            if (exactProduct) { let shadesText = (exactProduct.colours && exactProduct.colours.length) ? ' Available shades: ' + exactProduct.colours.map(c => c.name).join(', ') + '.' : ''; return '✨ **' + exactProduct.name + '**\n💰 Rs. ' + (exactProduct.price || 0).toLocaleString() + '\n📝 ' + (exactProduct.description || 'Premium quality.') + shadesText + '\n\nAdd to cart from the shop! 🛒'; }
+            if (lowerMsg.includes('new arrival')||lowerMsg.includes('latest')||lowerMsg.includes('new product')) { const sorted = [...products].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5); return sorted.length ? '🆕 **Latest Products:**\n' + sorted.map(p => '• ' + p.name + ' - Rs. ' + (p.price||0).toLocaleString()).join('\n') : "No new arrivals yet."; }
+            if (filtered.length > 0 && filtered.length < products.length) { const list = filtered.slice(0,5).map(p => '• **' + p.name + '** - Rs. ' + (p.price||0).toLocaleString()).join('\n'); return '🌸 I found ' + filtered.length + ' product(s):\n' + list + (filtered.length>5?'\n...and more!':'') + '\n\nBrowse our shop for details! 💝'; }
+            if (lowerMsg.includes('all product')||lowerMsg.includes('show all')||lowerMsg.includes('what do you have')) { const list = products.slice(0,8).map(p => '• ' + p.name + ' (' + (p.category||'Beauty') + ')').join('\n'); return products.length ? '🌟 **Our Collection:**\n' + list + (products.length>8?'\n...and '+(products.length-8)+' more!':'') + '\n\nAsk about any product for details! ✨' : "No products available at the moment."; }
+            try {
+                const sanitizedQuestion = sanitizeText(userMessage).substring(0,500);
+                if (sanitizedQuestion.length > 0) await db.collection('unansweredQuestions').add({ question: sanitizedQuestion, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+            } catch(e) {}
+            return "I'm still learning about that! 🤔\n\nTry asking:\n• 'Show lipsticks under Rs.5000'\n• 'What perfumes do you have?'\n• 'Price of [product name]'\n• 'New arrivals'\n\nI'll save your question and learn from it! 📚";
+        }
+
+        const chatMessagesDiv = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const chatToggleBtn = document.getElementById('chatToggleBtn');
+        const chatWindow = document.getElementById('chatWindow');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const chatWidgetCloseBtn = document.getElementById('chatWidgetCloseBtn');
+
+        function addMessage(text, isUser) {
+            const div = document.createElement('div');
+            div.className = 'message ' + (isUser ? 'user-msg' : 'bot-msg');
+            const formatted = isUser ? escapeHtml(text) : formatBotReply(text);
+            div.innerHTML = '<div class="bubble">' + formatted + '</div>';
+            chatMessagesDiv.appendChild(div);
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+        async function sendChatMessage() {
+            const rawText = chatInput.value;
+            const text = rawText.replace(/<[^>]*>/g, '').trim();
+            if (!text) return;
+            const now = Date.now();
+            if (now - lastChatTime < CHAT_COOLDOWN_MS) { showToast('⏳ Please wait a moment before sending another message.'); return; }
+            lastChatTime = now;
+            if (text.length > 500) { showToast('⚠️ Message is too long (max 500 characters).'); return; }
+            addMessage(text, true);
+            chatInput.value = '';
+            chatInput.disabled = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-msg';
+            typingDiv.innerHTML = '<div class="bubble"><i class="fas fa-circle-notch fa-spin"></i> Thinking...</div>';
+            typingDiv.id = 'typingIndicator';
+            chatMessagesDiv.appendChild(typingDiv);
+            let reply;
+            try { reply = await getBotReply(text); } catch(e) { reply = "I'm having trouble processing that right now. Please try again! 🙏"; }
+            document.getElementById('typingIndicator')?.remove();
+            addMessage(reply, false);
+            chatInput.disabled = false;
+            chatInput.focus();
+        }
+        chatToggleBtn.addEventListener('click', () => { chatWindow.classList.toggle('open'); });
+        closeChatBtn.addEventListener('click', () => { chatWindow.classList.remove('open'); });
+        chatWidgetCloseBtn.addEventListener('click', (e) => { e.stopPropagation(); chatWidget.style.display = 'none'; });
+        document.getElementById('sendChatBtn').addEventListener('click', sendChatMessage);
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); } });
+        chatInput.addEventListener('paste', (e) => { e.preventDefault(); const pastedText = (e.clipboardData || window.clipboardData).getData('text'); const cleanText = pastedText.replace(/<[^>]*>/g, ''); chatInput.value = cleanText.substring(0,500); });
+
+        loadTrainingData();
+        setupRealtimeProducts();
+        renderCartItems();
+        updateCartCount();
+        setInterval(loadTrainingData, 300000);
+    </script>
 </body>
 </html>
