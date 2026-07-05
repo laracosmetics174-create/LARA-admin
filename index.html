@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Poppins',sans-serif;background:#0a0a0a;color:#ddd;min-height:100vh;padding:20px}
@@ -90,9 +91,11 @@
             <button class="tab-btn active" onclick="switchTab('products')"><i class="fas fa-box"></i> Products</button>
             <button class="tab-btn" onclick="switchTab('training')"><i class="fas fa-brain"></i> AI Training</button>
             <button class="tab-btn" onclick="switchTab('unanswered')"><i class="fas fa-question-circle"></i> Unanswered Questions</button>
+            <!-- 🔥 New Shade Finder Tab -->
+            <button class="tab-btn" id="shadeFinderTabBtn" onclick="switchTab('shadeFinder')"><i class="fas fa-magic"></i> AI Shade Finder</button>
         </div>
 
-        <!-- Products Tab -->
+        <!-- Products Tab (unchanged) -->
         <div class="tab-content active" id="productsTab">
             <div class="form-card">
                 <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Add New Product</h3>
@@ -136,7 +139,7 @@
             </div>
         </div>
 
-        <!-- AI Training Tab -->
+        <!-- AI Training Tab (unchanged) -->
         <div class="tab-content" id="trainingTab">
             <div class="stats-grid">
                 <div class="stat-card">
@@ -186,7 +189,7 @@
             </div>
         </div>
 
-        <!-- Unanswered Questions Tab -->
+        <!-- Unanswered Questions Tab (unchanged) -->
         <div class="tab-content" id="unansweredTab">
             <div class="form-card">
                 <h3><i class="fas fa-question-circle"></i> Unanswered Customer Questions</h3>
@@ -194,17 +197,54 @@
                 <div id="unansweredList"><p style="color:#888;">Loading...</p></div>
             </div>
         </div>
+
+        <!-- 🔥 AI Shade Finder Tab (new) -->
+        <div class="tab-content" id="shadeFinderTab">
+            <div class="stats-grid" id="shadeFinderStats">
+                <div class="stat-card">
+                    <div class="stat-number" id="sfTotalCustomers">0</div>
+                    <div class="stat-label">Total Customers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="sfTotalRecommendations">0</div>
+                    <div class="stat-label">Total Recommendations</div>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <h3><i class="fas fa-search"></i> Search Recommendations</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Search by Name</label>
+                        <input type="text" id="sfSearchName" placeholder="Customer name..." />
+                    </div>
+                    <div class="form-group">
+                        <label>Search by Phone</label>
+                        <input type="text" id="sfSearchPhone" placeholder="Phone number..." />
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="window.LARAShadeFinderAdmin.loadData()"><i class="fas fa-search"></i> Search</button>
+                <button class="btn-secondary" onclick="window.LARAShadeFinderAdmin.clearSearch()" style="margin-left:8px;"><i class="fas fa-times"></i> Clear</button>
+            </div>
+
+            <div class="form-card">
+                <h3><i class="fas fa-list"></i> Recommendations List</h3>
+                <div id="sfRecommendationsList"><p style="color:#888;">Loading...</p></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+    // ==================== FIREBASE CONFIG ====================
     const firebaseConfig={apiKey:"AIzaSyAOqKpGbesbgeAfA2J_QGfomjTiY_FIfnA",authDomain:"lara-f5aed.firebaseapp.com",projectId:"lara-f5aed",storageBucket:"lara-f5aed.firebasestorage.app",messagingSenderId:"942336215471",appId:"1:942336215471:web:7971423ac9d4cff776075a"};
     firebase.initializeApp(firebaseConfig);
     const db=firebase.firestore(),auth=firebase.auth();
+    const storage = firebase.storage(); // for admin image deletion
 
     let editingProductId=null,currentColours=[],currentTab='products';
 
-    // Tab switching
+    // Tab switching (updated to include shadeFinder)
     window.switchTab=(tab)=>{
         currentTab=tab;
         document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -213,9 +253,10 @@
         document.getElementById(tab+'Tab').classList.add('active');
         if(tab==='training'){loadTraining();loadProductsForSelect();}
         if(tab==='unanswered')loadUnanswered();
+        if(tab==='shadeFinder')loadShadeFinderData();
     };
 
-    // Color picker functions
+    // Color picker functions (unchanged)
     window.onColorPickerChange=()=>{const hex=document.getElementById('colorPicker').value.toUpperCase();document.getElementById('colourHexInput').value=hex;document.getElementById('colourPreview').style.background=hex;document.getElementById('colorPickerPreview').style.background=hex;};
     window.onHexInputChange=()=>{const hexInput=document.getElementById('colourHexInput');let hex=hexInput.value.toUpperCase();if(hex&&!hex.startsWith('#')){hex='#'+hex;hexInput.value=hex;}if(/^#[0-9A-F]{6}$/.test(hex)){document.getElementById('colorPicker').value=hex;document.getElementById('colourPreview').style.background=hex;document.getElementById('colorPickerPreview').style.background=hex;}};
     window.selectPreset=(hex,name)=>{document.getElementById('colorPicker').value=hex;document.getElementById('colourHexInput').value=hex;document.getElementById('colourNameInput').value=name;document.getElementById('colourPreview').style.background=hex;document.getElementById('colorPickerPreview').style.background=hex;};
@@ -228,7 +269,7 @@
     window.logout=()=>auth.signOut();
     auth.onAuthStateChanged(user=>{if(user){document.getElementById('loginBox').classList.add('hidden');document.getElementById('adminPanel').classList.add('active');document.getElementById('adminEmail').textContent=user.email;loadProducts();}else{document.getElementById('loginBox').classList.remove('hidden');document.getElementById('adminPanel').classList.remove('active');}});
 
-    // Products CRUD
+    // Products CRUD (unchanged)
     async function loadProducts(){
         const list=document.getElementById('productList');list.innerHTML='<p style="color:#888;">Loading...</p>';
         const snap=await db.collection('products').orderBy('createdAt','desc').get();const prods=[];snap.forEach(d=>prods.push({id:d.id,...d.data()}));
@@ -255,7 +296,7 @@
     window.cancelEdit=()=>resetForm();
     function resetForm(){editingProductId=null;document.getElementById('editProductId').value='';document.getElementById('productName').value='';document.getElementById('productCategory').value='';document.getElementById('productPrice').value='';document.getElementById('productImage').value='';document.getElementById('productDescription').value='';currentColours=[];renderColourTags();document.getElementById('formTitle').innerHTML='<i class="fas fa-plus-circle"></i> Add New Product';document.getElementById('saveBtnText').textContent='Save Product';document.getElementById('cancelEditBtn').classList.add('hidden');}
 
-    // AI Training Functions
+    // AI Training Functions (unchanged)
     window.saveTraining=async()=>{
         const question=document.getElementById('trainingQuestion').value.trim();
         const keywords=document.getElementById('trainingKeywords').value.trim();
@@ -298,7 +339,7 @@
 
     window.deleteTraining=async(id)=>{if(confirm('Delete this training?')){await db.collection('chatbotTraining').doc(id).delete();loadTraining();}};
 
-    // Unanswered Questions
+    // Unanswered Questions (unchanged)
     async function loadUnanswered(){
         const snap=await db.collection('unansweredQuestions').orderBy('timestamp','desc').limit(50).get();
         const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));
@@ -332,6 +373,154 @@
     };
 
     window.deleteUnanswered=async(id)=>{if(confirm('Delete?')){await db.collection('unansweredQuestions').doc(id).delete();loadUnanswered();}};
+
+    // ==================== 🔥 AI SHADE FINDER ADMIN FUNCTIONS ====================
+    async function loadShadeFinderData(searchName, searchPhone) {
+        const listEl = document.getElementById('sfRecommendationsList');
+        if (!listEl) return;
+        listEl.innerHTML = '<p style="color:#888;">Loading...</p>';
+
+        try {
+            let query = db.collection('lipstickRecommendations').orderBy('createdAt', 'desc');
+            if (searchName && searchName.trim()) {
+                query = query.where('customerName', '>=', searchName.trim())
+                             .where('customerName', '<=', searchName.trim() + '\uf8ff');
+            }
+            const snap = await query.limit(50).get();
+            const items = [];
+            snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+
+            // Client-side phone filter
+            let filtered = items;
+            if (searchPhone && searchPhone.trim()) {
+                const phoneFilter = searchPhone.trim().toLowerCase();
+                filtered = items.filter(item => (item.phone || '').toLowerCase().includes(phoneFilter));
+            }
+
+            document.getElementById('sfTotalRecommendations').textContent = filtered.length;
+            const customers = new Set(filtered.map(i => i.customerName).filter(Boolean));
+            document.getElementById('sfTotalCustomers').textContent = customers.size;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<p style="color:#888;">No recommendations found.</p>';
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(item => `
+            <div class="qa-item" style="flex-direction:column;align-items:flex-start;">
+                <div style="display:flex;align-items:center;gap:14px;width:100%;flex-wrap:wrap;">
+                    ${item.imageURL && !item.imageURL.startsWith('data:') ? 
+                        `<img src="${escapeHtmlAttr(item.imageURL)}" style="width:60px;height:60px;object-fit:cover;border-radius:12px;" onerror="this.style.display='none'" />` : 
+                        `<div style="width:60px;height:60px;border-radius:12px;background:#333;display:flex;align-items:center;justify-content:center;color:#888;"><i class="fas fa-camera"></i></div>`}
+                    <div style="flex:1;">
+                        <strong style="color:#fff;">${escapeHtml(item.customerName || 'Unknown')}</strong>
+                        <small style="display:block;color:#aaa;">📱 ${escapeHtml(item.phone || 'N/A')}</small>
+                        <small style="color:#888;">🎨 Skin: ${escapeHtml(item.skinTone || 'N/A')} | Undertone: ${escapeHtml(item.undertone || 'N/A')}</small>
+                    </div>
+                    <small style="color:#666;">📅 ${item.createdAt ? new Date(item.createdAt.toDate()).toLocaleDateString('en-LK') : 'N/A'}</small>
+                </div>
+                ${item.recommendedProducts && item.recommendedProducts.length > 0 ? `
+                <div style="margin-top:10px;width:100%;">
+                    <small style="color:#aaa;">💄 Recommended:</small>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+                        ${item.recommendedProducts.map(rp => `
+                            <span class="mini-colour-tag">
+                                <span class="mini-dot" style="background:${escapeHtmlAttr(rp.shadeHex || '#ccc')};"></span>
+                                ${escapeHtml(rp.productName || 'Product')} - ${escapeHtml(rp.shadeName || 'N/A')} 
+                                <small style="color:#888;">(${rp.score || '?'}/5)</small>
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>` : '<small style="color:#888;">No product recommendations</small>'}
+                <div style="margin-top:8px;display:flex;gap:8px;">
+                    <button class="btn-danger btn-small" onclick="window.LARAShadeFinderAdmin.deleteRecommendation('${escapeHtmlAttr(item.id)}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>`).join('');
+
+        } catch (e) {
+            console.error('❌ Load recommendations error:', e);
+            listEl.innerHTML = '<p style="color:#c0392b;">Error loading data: ' + escapeHtml(e.message) + '</p>';
+        }
+    }
+
+    async function deleteRecommendation(id) {
+        if (!confirm('Delete this recommendation permanently?')) return;
+        try {
+            const doc = await db.collection('lipstickRecommendations').doc(id).get();
+            const data = doc.data();
+            if (data && data.imageURL) {
+                // Try to delete from storage
+                try {
+                    if (data.imageURL.includes('firebasestorage.googleapis.com')) {
+                        const pathMatch = data.imageURL.match(/\/o\/(.+?)\?/);
+                        if (pathMatch) await storage.ref(decodeURIComponent(pathMatch[1])).delete();
+                    }
+                } catch (storageErr) { console.warn('Storage delete failed:', storageErr); }
+            }
+            await db.collection('lipstickRecommendations').doc(id).delete();
+            alert('Deleted! ✅');
+            loadShadeFinderData();
+        } catch (e) {
+            alert('Delete failed: ' + e.message);
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('sfSearchName').value = '';
+        document.getElementById('sfSearchPhone').value = '';
+        loadShadeFinderData();
+    }
+
+    // Helper escape functions for admin
+    function escapeHtml(str) {
+        if (typeof str !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    function escapeHtmlAttr(str) {
+        if (typeof str !== 'string') return '';
+        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#039;');
+    }
+
+    // Expose globally for the onclick handlers
+    window.LARAShadeFinderAdmin = {
+        loadData: () => {
+            const name = document.getElementById('sfSearchName')?.value || '';
+            const phone = document.getElementById('sfSearchPhone')?.value || '';
+            loadShadeFinderData(name, phone);
+        },
+        clearSearch,
+        deleteRecommendation
+    };
+
+    // Search event listeners
+    document.getElementById('sfSearchName')?.addEventListener('input', debounce(function() {
+        loadShadeFinderData(this.value, document.getElementById('sfSearchPhone')?.value || '');
+    }, 400));
+    document.getElementById('sfSearchPhone')?.addEventListener('input', debounce(function() {
+        loadShadeFinderData(document.getElementById('sfSearchName')?.value || '', this.value);
+    }, 400));
+
+    function debounce(fn, delay) {
+        let timer;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    // Initial load when admin panel becomes visible
+    const observer = new MutationObserver(() => {
+        if (document.getElementById('adminPanel')?.classList.contains('active')) {
+            // Preload shade finder data when panel activates (optional)
+            observer.disconnect();
+        }
+    });
+    const adminPanelEl = document.getElementById('adminPanel');
+    if (adminPanelEl) observer.observe(adminPanelEl, { attributes: true, attributeFilter: ['class'] });
 </script>
 </body>
 </html>
